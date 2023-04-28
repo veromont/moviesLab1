@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -8,7 +9,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using moviesAPI.Models;
 using moviesAPI.Models.dbContext;
+using moviesAPI.ticketToFileConvert;
 using NPOI.XWPF.UserModel;
+using PdfSharp.Drawing;
+using PdfSharp.Pdf;
 
 namespace moviesAPI.Controllers.GeneratedControllers
 {
@@ -131,17 +135,20 @@ namespace moviesAPI.Controllers.GeneratedControllers
 
             return NoContent();
         }
-        [HttpGet("GetDocxFile")]
-        public FileStreamResult GetTicketAsDocx()
+        [HttpGet("GetPDFFile")]
+        public FileStreamResult GetTicketAsPDF()
         {
-            var ms = new MemoryStream();
-            var doc = new XWPFDocument();
-            doc.Write(ms);
-
-            var fileName = "EmptyDocx.docx";
-            var contentType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-
-            return File(ms, contentType, fileName);
+            using (var ms = new MemoryStream())
+            {
+                var document = new PdfDocument();
+                var page = document.AddPage();
+                var gfx = XGraphics.FromPdfPage(page);
+                document.Save(ms, false);
+                var bytes = ms.ToArray();
+                var fileName = "ticket.pdf";
+                var contentType = "application/pdf";
+                return File(new MemoryStream(bytes), contentType, fileName);
+            }
         }
         private bool TicketExists(string id)
         {
