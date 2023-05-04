@@ -21,25 +21,23 @@ namespace moviesAPI.Controllers.GeneratedControllers
             _context = context;
         }
 
-        // GET: api/Movies
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Movie>>> GetMovies()
         {
-            if (_context.Movies == null)
-            {
-                return NotFound();
-            }
+          if (_context.Movies == null)
+          {
+              return NotFound();
+          }
             return await _context.Movies.ToListAsync();
         }
 
-        // GET: api/Movies/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Movie>> GetMovie(string id)
         {
-            if (_context.Movies == null)
-            {
-                return NotFound();
-            }
+          if (_context.Movies == null)
+          {
+              return NotFound();
+          }
             var movie = await _context.Movies.FindAsync(id);
 
             if (movie == null)
@@ -50,8 +48,6 @@ namespace moviesAPI.Controllers.GeneratedControllers
             return movie;
         }
 
-        // PUT: api/Movies/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
         public async Task<IActionResult> PutMovie(string id, Movie movie)
         {
@@ -81,15 +77,13 @@ namespace moviesAPI.Controllers.GeneratedControllers
             return NoContent();
         }
 
-        // POST: api/Movies
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
         public async Task<ActionResult<Movie>> PostMovie(Movie movie)
         {
-            if (_context.Movies == null)
-            {
-                return Problem("Entity set 'MovieCinemaLabContext.Movies'  is null.");
-            }
+          if (_context.Movies == null)
+          {
+              return Problem("Entity set 'MovieCinemaLabContext.Movies'  is null.");
+          }
             _context.Movies.Add(movie);
             try
             {
@@ -110,7 +104,6 @@ namespace moviesAPI.Controllers.GeneratedControllers
             return CreatedAtAction("GetMovie", new { id = movie.Id }, movie);
         }
 
-        // DELETE: api/Movies/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteMovie(string id)
         {
