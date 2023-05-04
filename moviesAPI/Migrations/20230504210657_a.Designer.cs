@@ -12,8 +12,8 @@ using moviesAPI.Models.dbContext;
 namespace moviesAPI.Migrations
 {
     [DbContext(typeof(MovieCinemaLabContext))]
-    [Migration("20230504075053_movieApiMigration")]
-    partial class movieApiMigration
+    [Migration("20230504210657_a")]
+    partial class a
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -226,7 +226,7 @@ namespace moviesAPI.Migrations
             modelBuilder.Entity("moviesAPI.Models.Ticket", b =>
                 {
                     b.HasOne("moviesAPI.Models.Session", "Session")
-                        .WithMany("Tickets")
+                        .WithMany("SessionTickets")
                         .HasForeignKey("SessionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
@@ -252,7 +252,7 @@ namespace moviesAPI.Migrations
 
             modelBuilder.Entity("moviesAPI.Models.Session", b =>
                 {
-                    b.Navigation("Tickets");
+                    b.Navigation("SessionTickets");
                 });
 #pragma warning restore 612, 618
         }

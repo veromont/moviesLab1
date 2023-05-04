@@ -223,7 +223,7 @@ namespace moviesAPI.Migrations
             modelBuilder.Entity("moviesAPI.Models.Ticket", b =>
                 {
                     b.HasOne("moviesAPI.Models.Session", "Session")
-                        .WithMany("Tickets")
+                        .WithMany("SessionTickets")
                         .HasForeignKey("SessionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
@@ -249,7 +249,7 @@ namespace moviesAPI.Migrations
 
             modelBuilder.Entity("moviesAPI.Models.Session", b =>
                 {
-                    b.Navigation("Tickets");
+                    b.Navigation("SessionTickets");
                 });
 #pragma warning restore 612, 618
         }
