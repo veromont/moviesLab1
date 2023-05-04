@@ -22,7 +22,8 @@ services:
     hostname: movieDb
     container_name: movieDb
     environment:
-      ACCEPT_EULA: Y
+      - SA_PASSWORD=BigPassw0rd1
+      - ACCEPT_EULA=Y
     volumes:
       - ./data/mssql:/var/opt/mssql3
     ports:
