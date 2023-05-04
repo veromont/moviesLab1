@@ -94,7 +94,6 @@ public partial class MovieCinemaLabContext : DbContext
             entity.Property(e => e.StartTime)
                 .HasColumnType("datetime")
                 .HasColumnName("start_time");
-            entity.Property(e => e.Tickets).HasColumnName("tickets");
             entity.HasOne(d => d.Hall).WithMany(p => p.Sessions)
                 .HasForeignKey(d => d.HallId)
                 .OnDelete(DeleteBehavior.Cascade)
@@ -127,7 +126,7 @@ public partial class MovieCinemaLabContext : DbContext
                 .IsFixedLength()
                 .HasColumnName("session_id");
 
-            entity.HasOne(d => d.Session).WithMany(p => p.Tickets)
+            entity.HasOne(d => d.Session).WithMany(p => p.SessionTickets)
                 .HasForeignKey(d => d.SessionId)
                 .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("FK__ticket__session___412EB0B6");

@@ -12,5 +12,5 @@ public partial class Session
     public DateTime EndTime { get; set; }
     public virtual Hall Hall { get; set; } = null!;
     public virtual Movie Movie { get; set; } = null!;
-    public virtual ICollection<Ticket>? Tickets { get; set; } = new List<Ticket>();
+    public virtual ICollection<Ticket> SessionTickets { get; set; } = new List<Ticket>();
 }
