@@ -1,7 +1,11 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
+using moviesAPI.FileTransform;
+using moviesAPI.Interfaces;
 using moviesAPI.Models.dbContext;
+using moviesAPI.Services;
 using System.Text.Json;
+using System.Xml.Xsl;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,6 +29,9 @@ builder.Services.AddSwaggerGen(d =>
     }
     );
 });
+builder.Services.AddScoped<IMovieFilterService, MovieFilterService>();
+builder.Services.AddScoped<ISessionFilterService, SessionFilterService>();
+builder.Services.AddScoped<IFileTransform, PdfTransform>();
 builder.Services.AddEndpointsApiExplorer();
 var app = builder.Build();
 if (app.Environment.IsDevelopment())

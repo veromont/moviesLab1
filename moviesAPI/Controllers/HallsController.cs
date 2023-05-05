@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using moviesAPI.Models;
 using moviesAPI.Models.dbContext;
 
-namespace moviesAPI.Controllers.GeneratedControllers
+namespace moviesAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
