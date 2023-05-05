@@ -11,6 +11,7 @@ using moviesAPI.FileTransform;
 using PdfSharp.Drawing;
 using PdfSharp.Pdf;
 using Org.BouncyCastle.Utilities;
+using Microsoft.IdentityModel.Tokens;
 
 namespace moviesAPI.Controllers
 {
@@ -26,44 +27,31 @@ namespace moviesAPI.Controllers
             pdfTransform = new PdfTransform();
         }
 
-        // GET: api/Tickets
-        [HttpGet]
+        [HttpGet("get-tickets")]
         public async Task<ActionResult<IEnumerable<Ticket>>> GetTickets()
         {
-            if (_context.Tickets == null)
-            {
-                return NotFound();
-            }
+            if (_context.Tickets == null) return NotFound();
             return await _context.Tickets.ToListAsync();
         }
 
-        // GET: api/Tickets/5
-        [HttpGet("{id}")]
+        [HttpGet("get-ticket")]
         public async Task<ActionResult<Ticket>> GetTicket(string id)
         {
             if (_context.Tickets == null)
-            {
                 return NotFound();
-            }
             var ticket = await _context.Tickets.FindAsync(id);
 
             if (ticket == null)
-            {
                 return NotFound();
-            }
 
             return ticket;
         }
 
-        // PUT: api/Tickets/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
+        [HttpPut]
         public async Task<IActionResult> PutTicket(string id, Ticket ticket)
         {
             if (id != ticket.Id)
-            {
                 return BadRequest();
-            }
 
             _context.Entry(ticket).State = EntityState.Modified;
 
@@ -74,49 +62,39 @@ namespace moviesAPI.Controllers
             catch (DbUpdateConcurrencyException)
             {
                 if (!TicketExists(id))
-                {
                     return NotFound();
-                }
                 else
-                {
                     throw;
-                }
             }
 
             return NoContent();
         }
 
-        // POST: api/Tickets
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Ticket>> PostTicket(Ticket ticket)
+        public async Task<ActionResult> PostTicket(Ticket ticket)
         {
             if (_context.Tickets == null)
-            {
-                return Problem("Entity set 'MovieCinemaLabContext.Tickets'  is null.");
-            }
+                return BadRequest("Entity set 'context.Tickets' is null.");
+            if (TicketExists(ticket.Id))
+                return BadRequest($"ticket with id {ticket.Id} exists");
+            if (isTicketInvalid(ticket))
+                return BadRequest($"ticket failed validation");
+
             _context.Tickets.Add(ticket);
+
             try
             {
                 await _context.SaveChangesAsync();
             }
-            catch (DbUpdateException)
+            catch
             {
-                if (TicketExists(ticket.Id))
-                {
-                    return Conflict();
-                }
-                else
-                {
-                    throw;
-                }
+                    return BadRequest("unknown error");
             }
 
             return CreatedAtAction("GetTicket", new { id = ticket.Id }, ticket);
         }
 
-        // DELETE: api/Tickets/5
-        [HttpDelete("{id}")]
+        [HttpDelete]
         public async Task<IActionResult> DeleteTicket(string id)
         {
             if (_context.Tickets == null)
@@ -147,6 +125,19 @@ namespace moviesAPI.Controllers
         private bool TicketExists(string id)
         {
             return (_context.Tickets?.Any(e => e.Id == id)).GetValueOrDefault();
+        }
+        private bool isTicketInvalid(Ticket ticket)
+        {
+            var sessions = _context.Sessions.Select(x => x).Where(x => x.Id == ticket.SessionId).ToArray();
+            if (sessions.IsNullOrEmpty()) return true;
+            var session = sessions[0];
+            var sameSeatTickets = session.SessionTickets.Select(x => x).Where(t => t.SeatNumber == ticket.SeatNumber);
+
+            if (sameSeatTickets.Count() > 0) return true;
+            if (session.Hall.Capacity < ticket.SeatNumber || ticket.SeatNumber <= 0) return true;
+            if (!session.Hall.IsAvailable) return true;
+
+            return false;
         }
     }
 }

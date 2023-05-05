@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
@@ -21,8 +22,7 @@ namespace moviesAPI.Controllers
             _context = context;
         }
 
-        // GET: api/Genres
-        [HttpGet]
+        [HttpGet("get-genres")]
         public async Task<ActionResult<IEnumerable<Genre>>> GetGenres()
         {
             if (_context.Genres == null)
@@ -32,8 +32,7 @@ namespace moviesAPI.Controllers
             return await _context.Genres.ToListAsync();
         }
 
-        // GET: api/Genres/5
-        [HttpGet("{id}")]
+        [HttpGet("get-genre")]
         public async Task<ActionResult<Genre>> GetGenre(int id)
         {
             if (_context.Genres == null)
@@ -50,9 +49,7 @@ namespace moviesAPI.Controllers
             return genre;
         }
 
-        // PUT: api/Genres/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
+        [HttpPut]
         public async Task<IActionResult> PutGenre(int id, Genre genre)
         {
             if (id != genre.Id)
@@ -81,22 +78,27 @@ namespace moviesAPI.Controllers
             return NoContent();
         }
 
-        // POST: api/Genres
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Genre>> PostGenre(Genre genre)
+        public async Task<ActionResult> PostGenre(Genre genre)
         {
-            if (_context.Genres == null)
-            {
-                return Problem("Entity set 'MovieCinemaLabContext.Genres'  is null.");
-            }
-            _context.Genres.Add(genre);
-            await _context.SaveChangesAsync();
+            if (_context.Genres == null) return BadRequest("Entity set 'context.Genres' is null.");
+            if (isGenreInvalid(genre)) return BadRequest("genre failed validation");
+            if (GenreExists(genre.Id)) return BadRequest("genre with this id exists");
 
-            return CreatedAtAction("GetGenre", new { id = genre.Id }, genre);
+            _context.Genres.Add(genre);
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch
+            {
+                return BadRequest("unknown exception");
+            }
+
+            return Ok();
         }
 
-        // DELETE: api/Genres/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteGenre(int id)
         {
@@ -119,6 +121,10 @@ namespace moviesAPI.Controllers
         private bool GenreExists(int id)
         {
             return (_context.Genres?.Any(e => e.Id == id)).GetValueOrDefault();
+        }
+        private bool isGenreInvalid(Genre newGenre)
+        {
+            return false;
         }
     }
 }

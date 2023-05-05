@@ -67,7 +67,7 @@ public partial class MovieCinemaLabContext : DbContext
 
             entity.HasOne(d => d.Genre).WithMany(p => p.Movies)
                 .HasForeignKey(d => d.GenreId)
-                .OnDelete(DeleteBehavior.Cascade)
+                .OnDelete(DeleteBehavior.SetNull)
                 .HasConstraintName("FK__movie__genre___412EB0B6");
         });
 

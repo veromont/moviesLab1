@@ -12,9 +12,11 @@ public partial class Movie
     public DateOnly ReleaseDate { get; set; }
     public double Rating { get; set; }
     public TimeOnly Duration { get; set; }
+    public int? GenreId { get; set; }
+
     [System.Text.Json.Serialization.JsonIgnore]
     public virtual ICollection<Session>? Sessions { get; set; } = new List<Session>();
-    public int GenreId { get; set; }
+
     [System.Text.Json.Serialization.JsonIgnore]
     public Genre? Genre { get; set; }
 }
