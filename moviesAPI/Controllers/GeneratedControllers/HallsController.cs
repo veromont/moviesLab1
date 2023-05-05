@@ -12,55 +12,55 @@ namespace moviesAPI.Controllers.GeneratedControllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class MoviesController : ControllerBase
+    public class HallsController : ControllerBase
     {
         private readonly MovieCinemaLabContext _context;
 
-        public MoviesController(MovieCinemaLabContext context)
+        public HallsController(MovieCinemaLabContext context)
         {
             _context = context;
         }
 
-        // GET: api/Movies
+        // GET: api/Halls
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Movie>>> GetMovies()
+        public async Task<ActionResult<IEnumerable<Hall>>> GetHalls()
         {
-            if (_context.Movies == null)
+            if (_context.Halls == null)
             {
                 return NotFound();
             }
-            return await _context.Movies.ToListAsync();
+            return await _context.Halls.ToListAsync();
         }
 
-        // GET: api/Movies/5
+        // GET: api/Halls/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Movie>> GetMovie(string id)
+        public async Task<ActionResult<Hall>> GetHall(int id)
         {
-            if (_context.Movies == null)
+            if (_context.Halls == null)
             {
                 return NotFound();
             }
-            var movie = await _context.Movies.FindAsync(id);
+            var hall = await _context.Halls.FindAsync(id);
 
-            if (movie == null)
+            if (hall == null)
             {
                 return NotFound();
             }
 
-            return movie;
+            return hall;
         }
 
-        // PUT: api/Movies/5
+        // PUT: api/Halls/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutMovie(string id, Movie movie)
+        public async Task<IActionResult> PutHall(int id, Hall hall)
         {
-            if (id != movie.Id)
+            if (id != hall.Id)
             {
                 return BadRequest();
             }
 
-            _context.Entry(movie).State = EntityState.Modified;
+            _context.Entry(hall).State = EntityState.Modified;
 
             try
             {
@@ -68,7 +68,7 @@ namespace moviesAPI.Controllers.GeneratedControllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!MovieExists(id))
+                if (!HallExists(id))
                 {
                     return NotFound();
                 }
@@ -81,29 +81,23 @@ namespace moviesAPI.Controllers.GeneratedControllers
             return NoContent();
         }
 
-        // POST: api/Movies
+        // POST: api/Halls
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Movie>> PostMovie(Movie movie)
+        public async Task<ActionResult<Hall>> PostHall(Hall hall)
         {
-            if (_context.Movies == null)
+            if (_context.Halls == null)
             {
-                return Problem("Entity set 'MovieCinemaLabContext.Movies'  is null.");
+                return Problem("Entity set 'MovieCinemaLabContext.Halls'  is null.");
             }
-            if (movie.Genre == null)
-            {
-                var genre = (from gen in _context.Genres where gen.Id == movie.GenreId select gen).ToArray()[0];
-                if (genre == null) return Conflict();
-                movie.Genre = genre;
-            }
-            _context.Movies.Add(movie);
+            _context.Halls.Add(hall);
             try
             {
                 await _context.SaveChangesAsync();
             }
             catch (DbUpdateException)
             {
-                if (MovieExists(movie.Id))
+                if (HallExists(hall.Id))
                 {
                     return Conflict();
                 }
@@ -113,32 +107,32 @@ namespace moviesAPI.Controllers.GeneratedControllers
                 }
             }
 
-            return CreatedAtAction("GetMovie", new { id = movie.Id }, movie);
+            return CreatedAtAction("GetHall", new { id = hall.Id }, hall);
         }
 
-        // DELETE: api/Movies/5
+        // DELETE: api/Halls/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteMovie(string id)
+        public async Task<IActionResult> DeleteHall(int id)
         {
-            if (_context.Movies == null)
+            if (_context.Halls == null)
             {
                 return NotFound();
             }
-            var movie = await _context.Movies.FindAsync(id);
-            if (movie == null)
+            var hall = await _context.Halls.FindAsync(id);
+            if (hall == null)
             {
                 return NotFound();
             }
 
-            _context.Movies.Remove(movie);
+            _context.Halls.Remove(hall);
             await _context.SaveChangesAsync();
 
             return NoContent();
         }
 
-        private bool MovieExists(string id)
+        private bool HallExists(int id)
         {
-            return (_context.Movies?.Any(e => e.Id == id)).GetValueOrDefault();
+            return (_context.Halls?.Any(e => e.Id == id)).GetValueOrDefault();
         }
     }
 }

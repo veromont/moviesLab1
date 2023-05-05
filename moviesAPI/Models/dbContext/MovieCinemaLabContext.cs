@@ -59,7 +59,7 @@ public partial class MovieCinemaLabContext : DbContext
                 .HasPrecision(0)
                 .HasColumnName("duration");
             entity.Property(e => e.Rating).HasColumnName("rating");
-            entity.Property(e => e.ReleaseDate).HasColumnName("release_date");
+            entity.Property(e => e.ReleaseDate).HasColumnName("release_date").HasColumnType("date");
             entity.Property(e => e.Title)
                 .HasMaxLength(100)
                 .IsUnicode(true)

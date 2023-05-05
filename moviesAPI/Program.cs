@@ -26,7 +26,6 @@ builder.Services.AddSwaggerGen(d =>
     );
 });
 builder.Services.AddEndpointsApiExplorer();
-
 var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {

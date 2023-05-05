@@ -12,5 +12,6 @@ public partial class Session
     public DateTime EndTime { get; set; }
     public virtual Hall Hall { get; set; } = null!;
     public virtual Movie Movie { get; set; } = null!;
-    public virtual ICollection<Ticket> SessionTickets { get; set; } = new List<Ticket>();
+    [System.Text.Json.Serialization.JsonIgnore]
+    public virtual ICollection<Ticket>? SessionTickets { get; set; } = new List<Ticket>();
 }
