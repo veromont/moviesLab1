@@ -1,4 +1,4 @@
-﻿using moviesAPI.Models;
+﻿using moviesAPI.Models.db;
 using PdfSharp.Drawing;
 using PdfSharp.Pdf;
 

@@ -1,6 +1,7 @@
-﻿using moviesAPI.Filters.DateFilters;
+﻿using moviesAPI.Filters;
+using moviesAPI.Filters.DateFilters;
 using moviesAPI.Interfaces;
-using moviesAPI.Models;
+using moviesAPI.Models.db;
 using moviesAPI.Models.dbContext;
 
 namespace moviesAPI.Services

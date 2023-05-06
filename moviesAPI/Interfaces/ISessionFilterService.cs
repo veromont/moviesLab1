@@ -1,4 +1,4 @@
-﻿using moviesAPI.Models;
+﻿using moviesAPI.Models.db;
 using moviesAPI.Models.dbContext;
 
 namespace moviesAPI.Interfaces

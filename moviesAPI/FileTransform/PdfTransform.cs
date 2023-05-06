@@ -1,5 +1,5 @@
 ﻿using moviesAPI.Interfaces;
-using moviesAPI.Models;
+using moviesAPI.Models.db;
 using moviesAPI.Models.dbContext;
 using PdfSharp.Drawing;
 using PdfSharp.Pdf;

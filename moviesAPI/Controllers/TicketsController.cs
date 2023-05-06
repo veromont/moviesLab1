@@ -5,13 +5,13 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using moviesAPI.Models;
 using moviesAPI.Models.dbContext;
 using moviesAPI.FileTransform;
 using PdfSharp.Drawing;
 using PdfSharp.Pdf;
 using Org.BouncyCastle.Utilities;
 using Microsoft.IdentityModel.Tokens;
+using moviesAPI.Models.db;
 
 namespace moviesAPI.Controllers
 {
@@ -50,8 +50,8 @@ namespace moviesAPI.Controllers
         [HttpPut]
         public async Task<IActionResult> PutTicket(string id, Ticket ticket)
         {
-            if (id != ticket.Id)
-                return BadRequest();
+            if (id != ticket.Id) return BadRequest();
+            if (!TicketExists(id)) return NotFound();
 
             _context.Entry(ticket).State = EntityState.Modified;
 
@@ -59,14 +59,10 @@ namespace moviesAPI.Controllers
             {
                 await _context.SaveChangesAsync();
             }
-            catch (DbUpdateConcurrencyException)
+            catch (Exception e)
             {
-                if (!TicketExists(id))
-                    return NotFound();
-                else
-                    throw;
+                return BadRequest(e.Message);
             }
-
             return NoContent();
         }
 
@@ -86,34 +82,29 @@ namespace moviesAPI.Controllers
             {
                 await _context.SaveChangesAsync();
             }
-            catch
+            catch (Exception e)
             {
-                    return BadRequest("unknown error");
+                return BadRequest(e.Message);
             }
 
-            return CreatedAtAction("GetTicket", new { id = ticket.Id }, ticket);
+            return Ok();
         }
 
         [HttpDelete]
         public async Task<IActionResult> DeleteTicket(string id)
         {
-            if (_context.Tickets == null)
-            {
-                return NotFound();
-            }
+            if (_context.Tickets == null) return NotFound();
             var ticket = await _context.Tickets.FindAsync(id);
-            if (ticket == null)
-            {
-                return NotFound();
-            }
+            if (ticket == null) return NotFound();
 
             _context.Tickets.Remove(ticket);
+
             await _context.SaveChangesAsync();
 
             return NoContent();
         }
 
-        [HttpGet("GetPDFFile")]
+        [HttpGet("get-pdf-ticket")]
         public FileStreamResult GetTicketAsPDF()
         {
             var fileName = "ticket.pdf";
@@ -131,12 +122,16 @@ namespace moviesAPI.Controllers
             var sessions = _context.Sessions.Select(x => x).Where(x => x.Id == ticket.SessionId).ToArray();
             if (sessions.IsNullOrEmpty()) return true;
             var session = sessions[0];
-            var sameSeatTickets = session.SessionTickets.Select(x => x).Where(t => t.SeatNumber == ticket.SeatNumber);
-
-            if (sameSeatTickets.Count() > 0) return true;
-            if (session.Hall.Capacity < ticket.SeatNumber || ticket.SeatNumber <= 0) return true;
-            if (!session.Hall.IsAvailable) return true;
-
+            var hall = _context.Halls.Find(session.HallId);
+            if (session.SessionTickets != null)
+            {
+                var sameSeatTickets = session.SessionTickets.Select(x => x)
+                                                            .Where(t => t.SeatNumber == ticket.SeatNumber);
+                if (sameSeatTickets.Count() > 0) return true;
+            }
+            if (hall.Capacity < ticket.SeatNumber || ticket.SeatNumber <= 0) return true;
+            if (!hall.IsAvailable) return true;
+            if (ticket.Price < 0) return true;
             return false;
         }
     }

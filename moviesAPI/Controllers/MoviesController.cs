@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using moviesAPI.Interfaces;
-using moviesAPI.Models;
+using moviesAPI.Models.db;
 using moviesAPI.Models.dbContext;
 using Newtonsoft.Json.Linq;
 
@@ -114,9 +114,9 @@ namespace moviesAPI.Controllers
             {
                 await _context.SaveChangesAsync();
             }
-            catch
+            catch(Exception e)
             {
-                return BadRequest("unknown exception");
+                return BadRequest(e.Message);
             }
 
             return Ok();
@@ -127,12 +127,16 @@ namespace moviesAPI.Controllers
         {
             return Ok(_filterService.getMoviesByDay(_context, date));
         }
-
-        [HttpPost("dateInterval")]
-        public ActionResult MoviesThisInterval([FromBody] JObject data)
+        public struct dateIntervalModel
         {
-            DateOnly dateFrom = data["dateFrom"].ToObject<DateOnly>();
-            DateOnly dateTo = data["dateTo"].ToObject<DateOnly>();
+            public DateOnly dateFrom { get; set; }
+            public DateOnly dateTo { get; set; }
+        }
+        [HttpPost("date-interval")]
+        public ActionResult MoviesThisInterval(dateIntervalModel interval)
+        {
+            DateOnly dateFrom = interval.dateFrom;
+            DateOnly dateTo = interval.dateTo;
             return Ok(_filterService.getMoviesByDateInterval(_context,dateFrom, dateTo));
         }
 
@@ -159,8 +163,8 @@ namespace moviesAPI.Controllers
             if (movie.ReleaseDate.Year <= START_OF_CINEMATOGRAPHY) return true;
             if (movie.Rating < MIN_RATING || movie.Rating > MAX_RATING) return true;
             if (movieGenre.IsNullOrEmpty() && movie.GenreId != null) return true;
-
-            movie.Genre = movieGenre[0];
+            if (movie.GenreId != null)
+                movie.Genre = movieGenre[0];
 
             return false;
         }

@@ -1,7 +1,7 @@
 ﻿using MathNet.Numerics.Distributions;
-using moviesAPI.Models;
+using moviesAPI.Models.db;
 
-namespace moviesAPI.Filters.DateFilters
+namespace moviesAPI.Filters
 {
     public class MovieGenreFilter
     {

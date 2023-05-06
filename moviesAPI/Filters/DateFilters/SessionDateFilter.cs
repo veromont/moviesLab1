@@ -1,5 +1,5 @@
 ﻿using moviesAPI.Interfaces;
-using moviesAPI.Models;
+using moviesAPI.Models.db;
 
 namespace moviesAPI.Filters.DateFilters
 {

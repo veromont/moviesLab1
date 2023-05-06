@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace moviesAPI.Models;
+namespace moviesAPI.Models.db;
 
 public partial class Movie
 {

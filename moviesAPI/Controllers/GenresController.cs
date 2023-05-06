@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using moviesAPI.Models;
+using moviesAPI.Models.db;
 using moviesAPI.Models.dbContext;
 
 namespace moviesAPI.Controllers
@@ -91,9 +91,9 @@ namespace moviesAPI.Controllers
             {
                 await _context.SaveChangesAsync();
             }
-            catch
+            catch (Exception e)
             {
-                return BadRequest("unknown exception");
+                return BadRequest(e.Message);
             }
 
             return Ok();
