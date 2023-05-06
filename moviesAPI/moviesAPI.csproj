@@ -10,6 +10,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="fonts\constantia\constan.ttf" />
+    <None Remove="fonts\constantia\constanb.ttf" />
+    <None Remove="fonts\constantia\constani.ttf" />
+    <None Remove="fonts\constantia\constanz.ttf" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="6.0.16" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Analyzers" Version="8.0.0-preview.3.23174.2" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.0-preview.3.23174.2">
@@ -27,6 +34,13 @@
     <PackageReference Include="NPOI" Version="2.6.0" />
     <PackageReference Include="PDFsharp" Version="6.0.0-preview-2" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.2.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="fonts\constantia\constan.ttf" />
+    <EmbeddedResource Include="fonts\constantia\constanb.ttf" />
+    <EmbeddedResource Include="fonts\constantia\constani.ttf" />
+    <EmbeddedResource Include="fonts\constantia\constanz.ttf" />
   </ItemGroup>
 
 </Project>

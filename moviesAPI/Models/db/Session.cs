@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace moviesAPI.Models.db;
 
@@ -11,12 +12,12 @@ public partial class Session
     public DateTime StartTime { get; set; }
     public DateTime EndTime { get; set; }
 
-    [System.Text.Json.Serialization.JsonIgnore]
+    [JsonIgnore]
     public virtual Hall? Hall { get; set; } = null!;
 
-    [System.Text.Json.Serialization.JsonIgnore]
+    [JsonIgnore]
     public virtual Movie? Movie { get; set; } = null!;
 
-    [System.Text.Json.Serialization.JsonIgnore]
+    [JsonIgnore]
     public virtual ICollection<Ticket>? SessionTickets { get; set; } = new List<Ticket>();
 }

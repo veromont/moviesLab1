@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Text.Json.Serialization;
 
 namespace moviesAPI.Models.db;
 
@@ -10,6 +9,6 @@ public partial class Hall
     public int Capacity { get; set; }
     public bool IsAvailable { get; set; }
 
-    [System.Text.Json.Serialization.JsonIgnore]
+    [JsonIgnore]
     public virtual ICollection<Session>? Sessions { get; set; } = new List<Session>();
 }

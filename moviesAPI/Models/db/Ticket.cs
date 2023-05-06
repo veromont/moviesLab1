@@ -1,6 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using NuGet.Configuration;
+using System.Text.Json.Serialization;
 
 namespace moviesAPI.Models.db;
 
@@ -11,6 +10,14 @@ public partial class Ticket
     public int SeatNumber { get; set; }
     public decimal Price { get; set; }
 
-    [System.Text.Json.Serialization.JsonIgnore]
+    [JsonIgnore]
     public virtual Session? Session { get; set; } = null!;
+
+    [JsonIgnore]
+    public static Dictionary<string, string> TranslationMap { get; } = new Dictionary<string, string>{
+            { nameof(Id), "ID-unicode" },
+            { nameof(SessionId), "Номер сеансу" },
+            { nameof(SeatNumber), "Місце" },
+            { nameof(Price), "Ціна квитка" }
+    };
 }

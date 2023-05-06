@@ -33,6 +33,10 @@ builder.Services.AddScoped<IMovieFilterService, MovieFilterService>();
 builder.Services.AddScoped<ISessionFilterService, SessionFilterService>();
 builder.Services.AddScoped<IFileTransform, PdfTransform>();
 builder.Services.AddEndpointsApiExplorer();
+
+//resolve fonts once
+MyFontResolver.Apply();
+
 var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {

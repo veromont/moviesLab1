@@ -1,5 +1,5 @@
-﻿using MessagePack;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace moviesAPI.Models.db
 {
@@ -9,7 +9,7 @@ namespace moviesAPI.Models.db
         public int Id { get; set; }
         public string Name { get; set; } = null!;
 
-        [System.Text.Json.Serialization.JsonIgnore]
+        [JsonIgnore]
         public virtual ICollection<Movie>? Movies { get; set; }
     }
 }

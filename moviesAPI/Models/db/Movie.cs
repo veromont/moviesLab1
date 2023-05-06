@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.Text.Json.Serialization;
 
 namespace moviesAPI.Models.db;
 
@@ -14,9 +12,9 @@ public partial class Movie
     public TimeOnly Duration { get; set; }
     public int? GenreId { get; set; }
 
-    [System.Text.Json.Serialization.JsonIgnore]
+    [JsonIgnore]
     public virtual ICollection<Session>? Sessions { get; set; } = new List<Session>();
 
-    [System.Text.Json.Serialization.JsonIgnore]
+    [JsonIgnore]
     public Genre? Genre { get; set; }
 }
