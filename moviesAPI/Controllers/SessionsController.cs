@@ -32,17 +32,6 @@ namespace moviesAPI.Controllers
             return await _context.Sessions.ToListAsync();
         }
 
-        [HttpGet("get-session")]
-        public async Task<ActionResult<Session>> GetSession(string id)
-        {
-            if (_context.Sessions == null) return NotFound();
-            var session = await _context.Sessions.FindAsync(id);
-
-            if (session == null) return NotFound();
-
-            return session;
-        }
-
         [HttpPut]
         public async Task<IActionResult> PutSession(string id, Session session)
         {
@@ -97,6 +86,23 @@ namespace moviesAPI.Controllers
             return Ok();
         }
 
+        [HttpPost("get-by-date")]
+        public async Task<ActionResult<IEnumerable<Session>>> GetByDate(DateOnly date)
+        {
+            return Ok(_filterService.getSessionsByDay(_context, date));
+        }
+
+        [HttpPost("get-by-date-interval")]
+        public async Task<ActionResult<IEnumerable<Session>>> GetByDateInterval(DateTime dateFrom, DateTime dateTo)
+        {
+            return Ok(_filterService.getSessionsByDateInterval(_context, dateFrom, dateTo));
+        }
+
+        [HttpPost("get-by-movieId")]
+        public async Task<ActionResult<IEnumerable<Session>>> GetByMovie(string movieId)
+        {
+            return Ok(_filterService.getSessionsByMovie(_context, movieId));
+        }
         private bool SessionExists(string id)
         {
             return (_context.Sessions?.Any(e => e.Id == id)).GetValueOrDefault();

@@ -12,12 +12,4 @@ public partial class Ticket
 
     [JsonIgnore]
     public virtual Session? Session { get; set; } = null!;
-
-    [JsonIgnore]
-    public static Dictionary<string, string> TranslationMap { get; } = new Dictionary<string, string>{
-            { nameof(Id), "ID-unicode" },
-            { nameof(SessionId), "Номер сеансу" },
-            { nameof(SeatNumber), "Місце" },
-            { nameof(Price), "Ціна квитка" }
-    };
 }

@@ -2,6 +2,7 @@
 using moviesAPI.Interfaces;
 using moviesAPI.Models.db;
 using moviesAPI.Models.dbContext;
+using NPOI.OpenXmlFormats.Dml;
 
 namespace moviesAPI.Services
 {
@@ -22,6 +23,17 @@ namespace moviesAPI.Services
         {
             var sessions = context.Sessions.ToArray();
             return _dateFilter.GetByDateInterval(sessions, dateFrom, dateTo);
+        }
+
+        public ICollection<Session> getSessionsByMovie(MovieCinemaLabContext context, string movieId)
+        {
+            var movie = context.Movies.Find(movieId);
+            var sessions = context.Sessions;
+            if (movie == null) return new List<Session>();
+            var result = from s in sessions 
+                         where s.MovieId == movieId 
+                         select s;
+            return result.ToArray();
         }
     }
 }

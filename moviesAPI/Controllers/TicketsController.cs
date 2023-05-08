@@ -12,6 +12,7 @@ using PdfSharp.Pdf;
 using Org.BouncyCastle.Utilities;
 using Microsoft.IdentityModel.Tokens;
 using moviesAPI.Models.db;
+using moviesAPI.Models;
 
 namespace moviesAPI.Controllers
 {
@@ -21,10 +22,12 @@ namespace moviesAPI.Controllers
     {
         private readonly MovieCinemaLabContext _context;
         private readonly PdfTransform pdfTransform;
+        private readonly TicketInfoModelConstructor ticketModelConstructor;
         public TicketsController(MovieCinemaLabContext context)
         {
             _context = context;
             pdfTransform = new PdfTransform();
+            ticketModelConstructor = new TicketInfoModelConstructor(context);
         }
 
         [HttpGet("get-tickets")]
@@ -105,11 +108,13 @@ namespace moviesAPI.Controllers
         }
 
         [HttpGet("get-pdf-ticket")]
-        public FileStreamResult GetTicketAsPDF()
+        public FileStreamResult GetTicketAsPDF(string ticketId)
         {
             var fileName = "ticket.pdf";
             var contentType = "application/pdf";
-            var memoryStream = pdfTransform.TransformTicketToPdf(new Ticket());
+            var t = _context.Tickets.Find(ticketId);
+            var ticketInfo = ticketModelConstructor.getpdfTicketModel(t);
+            var memoryStream = pdfTransform.TransformTicketToPdf(ticketInfo);
             return File(memoryStream, contentType, fileName);
         }
 

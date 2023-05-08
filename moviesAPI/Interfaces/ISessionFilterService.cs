@@ -8,5 +8,6 @@ namespace moviesAPI.Interfaces
         public ICollection<Session> getSessionsByDay(MovieCinemaLabContext context, DateOnly date);
         public ICollection<Session> getSessionsByDateInterval(MovieCinemaLabContext context,
                                                           DateTime dateFrom, DateTime dateTo);
+        public ICollection<Session> getSessionsByMovie(MovieCinemaLabContext context, string movieId);
     }
 }

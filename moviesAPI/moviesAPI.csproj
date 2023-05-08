@@ -10,6 +10,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="fonts\arial\arial.ttf" />
+    <None Remove="fonts\arial\arialbd.ttf" />
+    <None Remove="fonts\arial\arialbi.ttf" />
+    <None Remove="fonts\arial\ariali.ttf" />
     <None Remove="fonts\constantia\constan.ttf" />
     <None Remove="fonts\constantia\constanb.ttf" />
     <None Remove="fonts\constantia\constani.ttf" />
@@ -37,6 +41,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="fonts\arial\arial.ttf" />
+    <EmbeddedResource Include="fonts\arial\arialbd.ttf" />
+    <EmbeddedResource Include="fonts\arial\arialbi.ttf" />
+    <EmbeddedResource Include="fonts\arial\ariali.ttf" />
     <EmbeddedResource Include="fonts\constantia\constan.ttf" />
     <EmbeddedResource Include="fonts\constantia\constanb.ttf" />
     <EmbeddedResource Include="fonts\constantia\constani.ttf" />
