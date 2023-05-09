@@ -51,15 +51,15 @@ namespace moviesAPI.FileTransform
                     new XRect(0, 20, page.Width, 50),
                     XStringFormats.Center);
 
-                addTableRow(PdfTicketModel.TranslationMap[nameof(ticket.Id)], ticket.Id);
-                addTableRow(PdfTicketModel.TranslationMap[nameof(ticket.Price)], ticket.Price.ToString());
-                addTableRow(PdfTicketModel.TranslationMap[nameof(ticket.SeatNumber)], ticket.SeatNumber.ToString());
-                addTableRow(PdfTicketModel.TranslationMap[nameof(ticket.HallName)], ticket.HallName.ToString());
                 addTableRow(PdfTicketModel.TranslationMap[nameof(ticket.MovieTitle)], ticket.MovieTitle);
+                addTableRow(PdfTicketModel.TranslationMap[nameof(ticket.SeatNumber)], ticket.SeatNumber.ToString());
+                addTableRow(PdfTicketModel.TranslationMap[nameof(ticket.Price)], ticket.Price.ToString());
+                addTableRow(PdfTicketModel.TranslationMap[nameof(ticket.HallName)], ticket.HallName.ToString());
                 addTableRow(PdfTicketModel.TranslationMap[nameof(ticket.Time)], ticket.Time.ToString());
-                addTableRow(PdfTicketModel.TranslationMap[nameof(ticket.SessionId)], ticket.SessionId);
 
-                addQrCode();
+                addQrCode($"Ticket id = {ticket.Id}\nSession id = {ticket.SessionId}");
+
+                addDateTimeSign();
 
                 document.Save(ms, false);
                 var bytes = ms.ToArray();
@@ -97,16 +97,26 @@ namespace moviesAPI.FileTransform
         {
             return new XRect(topRect.X, topRect.Bottom, topRect.Width, topRect.Height);
         }
-        private void addQrCode() 
+        private void addQrCode(string info) 
         {
-            const string QRCODE_FILE_PATH = "moviesAPI\\Material\\qrCodeExample.png";
+            const string QRCODE_FILE_PATH = "Material\\qrCodeExample.png";
             double imageX = 100;
-            double imageY = 200;
+            double imageY = 320;
+            double imageWidth = 150;
+            double imageHeight = 150;
+
+            XImage image = QRGenerator.getQRCode(info);
+            gfx.DrawImage(image, imageX, imageY, imageWidth, imageHeight);
+        }
+        private void addDateTimeSign()
+        {
+            double imageX = 300;
+            double imageY = 401;
             double imageWidth = 200;
             double imageHeight = 100;
-
-            XImage image = XImage.FromFile(QRCODE_FILE_PATH);
-            gfx.DrawImage(image, imageX, imageY, imageWidth, imageHeight);
+            var font = new XFont("Arial", 10, XFontStyleEx.Regular);
+            var rectangle = new XRect(imageX, imageY, imageWidth, imageHeight);
+            gfx.DrawString(DateTime.UtcNow.ToString(), font, XBrushes.Black, rectangle, XStringFormats.Center);
         }
     }
 }

@@ -21,7 +21,7 @@ namespace moviesAPI.Models
             { nameof(Id), "ID-unicode" },
             { nameof(SessionId), "Номер сеансу" },
             { nameof(SeatNumber), "Місце" },
-            { nameof(Price), "Ціна квитка" },
+            { nameof(Price), "Ціна квитка(грн)" },
             { nameof(MovieTitle), "Назва фільму" },
             { nameof(Time), "Час початку сеансу" },
             { nameof(HallName), "Зал" },
