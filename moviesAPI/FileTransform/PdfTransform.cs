@@ -1,21 +1,10 @@
-﻿using moviesAPI.Interfaces;
-using moviesAPI.Models;
-using moviesAPI.Models.db;
-using moviesAPI.Models.dbContext;
-using NPOI.SS.Formula.Functions;
-using NPOI.XWPF.UserModel;
-using Org.BouncyCastle.Asn1.Pkcs;
-using PdfSharp;
+﻿using moviesAPI.Models;
 using PdfSharp.Drawing;
 using PdfSharp.Pdf;
-using SixLabors.ImageSharp;
-using System.Drawing;
-using System.Drawing.Text;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace moviesAPI.FileTransform
 {
-    public class PdfTransform : IFileTransform
+    public class PdfTransform
     {
         XGraphics gfx;
         PdfPage page;
@@ -116,7 +105,8 @@ namespace moviesAPI.FileTransform
             double imageHeight = 100;
             var font = new XFont("Arial", 10, XFontStyleEx.Regular);
             var rectangle = new XRect(imageX, imageY, imageWidth, imageHeight);
-            gfx.DrawString(DateTime.UtcNow.ToString(), font, XBrushes.Black, rectangle, XStringFormats.Center);
+            var date = DateTime.UtcNow.ToLocalTime();
+            gfx.DrawString(date.ToString(), font, XBrushes.Black, rectangle, XStringFormats.Center);
         }
     }
 }

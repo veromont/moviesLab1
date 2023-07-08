@@ -1,7 +1,7 @@
 ﻿using moviesAPI.Filters.DateFilters;
 using moviesAPI.Interfaces;
+using moviesAPI.Models.CinemaContext;
 using moviesAPI.Models.db;
-using moviesAPI.Models.dbContext;
 using NPOI.OpenXmlFormats.Dml;
 
 namespace moviesAPI.Services
@@ -14,18 +14,18 @@ namespace moviesAPI.Services
         {
             _dateFilter = new SessionDateFilter();
         }
-       public ICollection<Session> getSessionsByDay(MovieCinemaLabContext context, DateOnly date)
+       public ICollection<Session> getSessionsByDay(CinemaContext context, DateOnly date)
         {
             var sessions = context.Sessions.ToArray();
             return _dateFilter.GetByDay(sessions,date);
         }
-        public ICollection<Session> getSessionsByDateInterval(MovieCinemaLabContext context, DateTime dateFrom, DateTime dateTo)
+        public ICollection<Session> getSessionsByDateInterval(CinemaContext context, DateTime dateFrom, DateTime dateTo)
         {
             var sessions = context.Sessions.ToArray();
             return _dateFilter.GetByDateInterval(sessions, dateFrom, dateTo);
         }
 
-        public ICollection<Session> getSessionsByMovie(MovieCinemaLabContext context, string movieId)
+        public ICollection<Session> getSessionsByMovie(CinemaContext context, string movieId)
         {
             var movie = context.Movies.Find(movieId);
             var sessions = context.Sessions;

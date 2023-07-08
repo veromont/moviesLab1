@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using moviesAPI.Repositories;
 using moviesAPI.Models.db;
-using moviesAPI.Models.dbContext;
+using moviesAPI.Validators;
 
 namespace moviesAPI.Controllers
 {
@@ -14,93 +10,91 @@ namespace moviesAPI.Controllers
     [ApiController]
     public class HallsController : ControllerBase
     {
-        private readonly MovieCinemaLabContext _context;
-
-        public HallsController(MovieCinemaLabContext context)
+        private readonly CinemaRepository _repository;
+        private readonly EntityValidator _validator;
+        private readonly EntityExistsChecker _existsChecker; //TODO: implement
+        public HallsController(CinemaRepository repository, EntityValidator validator, EntityExistsChecker checker)
         {
-            _context = context;
+            _repository = repository;
+            _validator = validator;
+            _existsChecker = checker;
         }
 
-        [HttpGet("get-halls")]
+        [HttpGet("get-all")]
         public async Task<ActionResult<IEnumerable<Hall>>> GetHalls()
         {
-            if (_context.Halls == null) return NotFound();
-            return await _context.Halls.ToListAsync();
+            var entities = await _repository.GetHalls();
+            if (entities == null)
+                return BadRequest();
+
+            return Ok(entities);
         }
 
-        [HttpGet("get-hall")]
+        [HttpGet("get-by-id")]
         public async Task<ActionResult<Hall>> GetHall(int id)
         {
-            if (_context.Halls == null) return NotFound();
-            var hall = await _context.Halls.FindAsync(id);
+            var entity = await _repository.GetHallById(id);
+            if (entity == null)
+            {
+                return BadRequest();
+            }
 
-            if (hall == null) return NotFound();
-
-            return hall;
+            return Ok(entity);
         }
 
-        [HttpPut]
-        public async Task<IActionResult> PutHall(int id, Hall hall)
+        [HttpPut("update")]
+        public async Task<ActionResult> UpdateHall(int id, Hall hall)
         {
-            if (id != hall.Id) return BadRequest();
-            if (!HallExists(id)) return NotFound();
-            _context.Entry(hall).State = EntityState.Modified;
+            if (id != hall.Id)
+                return BadRequest();
 
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch
-            {
-                    throw;
-            }
+            var validationResult = _validator.isHallInvalid(hall);
+            if (validationResult != string.Empty)
+                return BadRequest(validationResult);
 
-            return NoContent();
-        }
+            var updatedSuccessfully = await _repository.UpdateHall(id, hall);
+            if (!updatedSuccessfully)
+                return BadRequest();
 
-        [HttpPost]
-        public async Task<ActionResult> PostHall(Hall hall)
-        {
-            if (_context.Halls == null) return BadRequest("Entity set 'context.Halls' is null.");
-            if (HallExists(hall.Id)) return BadRequest($"hall with id {hall.Id} already exists");
-            if (isHallInvalid(hall)) return BadRequest("hall failed validation");
-
-            _context.Halls.Add(hall);
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (Exception e)
-            {
-                return BadRequest(e.Message);
-            }
+            var savedSuccessfully = await _repository.Save();
+            if (!savedSuccessfully)
+                return BadRequest();
 
             return Ok();
         }
 
-        [HttpDelete]
-        public async Task<IActionResult> DeleteHall(int id)
+        [HttpPost("insert")]
+        public async Task<ActionResult> PostHall(Hall hall)
         {
-            if (_context.Halls == null) return NotFound();
-            var hall = await _context.Halls.FindAsync(id);
-            if (hall == null) return NotFound();
-            _context.Halls.Remove(hall);
-            await _context.SaveChangesAsync();
+            var validationResult = _validator.isHallInvalid(hall);
+            if (validationResult != string.Empty)
+                return BadRequest(validationResult);
 
-            return NoContent();
+            await _repository.InsertHall(hall);
+
+            var savedSuccessfully = await _repository.Save();
+            if (!savedSuccessfully)
+                return BadRequest();
+
+            return Ok();
         }
 
-        private bool HallExists(int id)
+        [HttpDelete("delete-by-id")]
+        public async Task<ActionResult> DeleteHall(int id)
         {
-            return (_context.Halls?.Any(e => e.Id == id)).GetValueOrDefault();
+            var deletedSuccessfully = await _repository.DeleteHall(id);
+
+            if (deletedSuccessfully)
+            {
+                var savedSuccessfully = await _repository.Save();
+                if (!savedSuccessfully)
+                    return BadRequest();
+
+                return Ok();
+            }
+
+            return BadRequest();
         }
-        bool isHallInvalid(Hall hall)
-        {
-            const int MAX_CAPACITY = 10000;
-            const int MIN_CAPACITY = 0;
-            if (hall.Capacity <= MIN_CAPACITY || hall.Capacity >= MAX_CAPACITY) return true;
-            return false;
-        }
+
     }
 }

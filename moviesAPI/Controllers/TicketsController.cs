@@ -1,18 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using moviesAPI.Models.dbContext;
 using moviesAPI.FileTransform;
-using PdfSharp.Drawing;
-using PdfSharp.Pdf;
-using Org.BouncyCastle.Utilities;
-using Microsoft.IdentityModel.Tokens;
 using moviesAPI.Models.db;
-using moviesAPI.Models;
+using moviesAPI.Models.CinemaContext;
 
 namespace moviesAPI.Controllers
 {
@@ -20,10 +10,10 @@ namespace moviesAPI.Controllers
     [ApiController]
     public class TicketsController : ControllerBase
     {
-        private readonly MovieCinemaLabContext _context;
+        private readonly CinemaContext _context;
         private readonly PdfTransform pdfTransform;
         private readonly TicketInfoModelConstructor ticketModelConstructor;
-        public TicketsController(MovieCinemaLabContext context)
+        public TicketsController(CinemaContext context)
         {
             _context = context;
             pdfTransform = new PdfTransform();
@@ -69,9 +59,11 @@ namespace moviesAPI.Controllers
             return NoContent();
         }
 
-        [HttpPost]
+        [HttpPost("create-ticket")]
         public async Task<ActionResult> PostTicket(Ticket ticket)
         {
+            if (ticket.Id == null)
+                ticket.Id = Guid.NewGuid().ToString();
             if (_context.Tickets == null)
                 return BadRequest("Entity set 'context.Tickets' is null.");
             if (TicketExists(ticket.Id))
@@ -92,6 +84,43 @@ namespace moviesAPI.Controllers
 
             return Ok();
         }
+        [HttpPost("book-ticket")]
+        public async Task<ActionResult> BookTicket(string sessionId)
+        {
+            const int MAX_HALL_SIZE = 1000;
+            const int DEFAULT_TICKET_PRICE = 100;
+            if (_context.Tickets == null)
+                return BadRequest("Entity set 'context.Tickets' is null.");
+
+            var session = _context.Sessions.Find(sessionId);
+            var bookedTickets = (from t in _context.Tickets where t.SessionId == sessionId select t).ToList();
+            var ticket = new Ticket();
+            ticket.Id = Guid.NewGuid().ToString();
+            for (int i = 1; i < MAX_HALL_SIZE; i++)
+            {
+                var tickets = from t in bookedTickets where t.SeatNumber == i select t;
+                if (tickets.Count() == 0)
+                {
+                    ticket.SeatNumber = i;
+                    break;
+                }
+            }
+            ticket.Price = DEFAULT_TICKET_PRICE;
+            ticket.SessionId = sessionId;
+
+            _context.Tickets.Add(ticket);
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception e)
+            {
+                return BadRequest(e.Message);
+            }
+
+            return Ok(ticket.Id);
+        }
 
         [HttpDelete]
         public async Task<IActionResult> DeleteTicket(string id)
@@ -107,7 +136,7 @@ namespace moviesAPI.Controllers
             return NoContent();
         }
 
-        [HttpGet("get-pdf-ticket")]
+        [HttpPost("get-pdf-ticket")]
         public FileStreamResult GetTicketAsPDF(string ticketId)
         {
             var fileName = "ticket.pdf";
@@ -121,23 +150,6 @@ namespace moviesAPI.Controllers
         private bool TicketExists(string id)
         {
             return (_context.Tickets?.Any(e => e.Id == id)).GetValueOrDefault();
-        }
-        private bool isTicketInvalid(Ticket ticket)
-        {
-            var sessions = _context.Sessions.Select(x => x).Where(x => x.Id == ticket.SessionId).ToArray();
-            if (sessions.IsNullOrEmpty()) return true;
-            var session = sessions[0];
-            var hall = _context.Halls.Find(session.HallId);
-            if (session.SessionTickets != null)
-            {
-                var sameSeatTickets = session.SessionTickets.Select(x => x)
-                                                            .Where(t => t.SeatNumber == ticket.SeatNumber);
-                if (sameSeatTickets.Count() > 0) return true;
-            }
-            if (hall.Capacity < ticket.SeatNumber || ticket.SeatNumber <= 0) return true;
-            if (!hall.IsAvailable) return true;
-            if (ticket.Price < 0) return true;
-            return false;
         }
     }
 }

@@ -1,11 +1,10 @@
-﻿using MathNet.Numerics.Distributions;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using moviesAPI.Interfaces;
+using moviesAPI.Models.CinemaContext;
 using moviesAPI.Models.db;
-using moviesAPI.Models.dbContext;
-using Newtonsoft.Json.Linq;
+using moviesAPI.Repositories;
+using moviesAPI.Validators;
+using NuGet.Protocol.Core.Types;
 
 namespace moviesAPI.Controllers
 {
@@ -13,44 +12,41 @@ namespace moviesAPI.Controllers
     [ApiController]
     public class MoviesController : ControllerBase
     {
-        private readonly MovieCinemaLabContext _context;
-        private readonly IMovieFilterService _filterService;
-        public MoviesController(MovieCinemaLabContext context, IMovieFilterService movieFilterService)
+        private readonly CinemaRepository _repository;
+        private readonly EntityValidator _validator;
+        private readonly EntityExistsChecker _existsChecker;
+
+        public MoviesController(CinemaRepository repository, EntityValidator validator, EntityExistsChecker checker)
         {
-            _context = context;
-            _filterService = movieFilterService;
+            _repository = repository;
+            _validator = validator;
+            _existsChecker = checker;
         }
 
-        #region generated endpoints
-        [HttpGet("get-movies")]
+        [HttpGet("get-all")]
         public async Task<ActionResult<IEnumerable<Movie>>> GetMovies()
         {
-            if (_context.Movies == null)
-            {
-                return NotFound();
-            }
-            return await _context.Movies.ToListAsync();
+            var entities = await _repository.GetMovies();
+            if (entities == null)
+                return BadRequest();
+
+            return Ok(entities);
         }
 
-        [HttpGet("get-movie")]
+        [HttpGet("get-by-id")]
         public async Task<ActionResult<Movie>> GetMovie(string id)
         {
-            if (_context.Movies == null)
+            var entity = await _repository.GetMovieById(Guid.Parse(id));
+            if (entity == null)
             {
-                return NotFound();
-            }
-            var movie = await _context.Movies.FindAsync(id);
-
-            if (movie == null)
-            {
-                return NotFound();
+                return BadRequest();
             }
 
-            return movie;
+            return Ok(entity);
         }
 
-        [HttpPut]
-        public async Task<IActionResult> PutMovie(string id, Movie movie)
+        [HttpPut("update")]
+        public async Task<ActionResult> PutMovie(string id, Movie movie)
         {
             if (id != movie.Id)
             {
@@ -78,7 +74,7 @@ namespace moviesAPI.Controllers
             return NoContent();
         }
 
-        [HttpDelete]
+        [HttpDelete("delete-by-id")]
         public async Task<IActionResult> DeleteMovie(string id)
         {
             if (_context.Movies == null)
@@ -96,15 +92,14 @@ namespace moviesAPI.Controllers
 
             return NoContent();
         }
-        #endregion
         
         [HttpPost]
         public async Task<ActionResult> CreateMovie(Movie movie)
         {
             if (_context.Movies == null) 
                 return BadRequest("Entity set 'context.Movies' is null.");
-            if (isMovieInvalid(movie)) 
-                return BadRequest("movie failed validation");
+            if (isMovieInvalid(movie) != "") 
+                return BadRequest(isMovieInvalid(movie));
             if (MovieExists(movie.Id))
                 return BadRequest($"movie with id '{movie.Id}' already exists");
 
@@ -140,33 +135,24 @@ namespace moviesAPI.Controllers
             return Ok(_filterService.getMoviesByDateInterval(_context,dateFrom, dateTo));
         }
 
-        [HttpPost("genre")]
-        public ActionResult MoviesThisGenre(int genreId)
+        [HttpPost("genres")]
+        public ActionResult MoviesByGenres(int?[] genresId)
         {
-            return Ok(_filterService.getMoviesByGenres(_context, genreId));
+            var movies = new List<Movie>();
+            foreach (var id in genresId)
+            {
+                var res = _filterService.getMoviesByGenres(_context, id);
+                foreach (var m in res)
+                {
+                    if (!movies.Contains(m))
+                        movies.Add(m);
+                }
+            }
+            return Ok(movies);
         }
-        private bool MovieExists(string id)
+        private bool MovieExists(Guid id)
         {
             return (_context.Movies?.Any(e => e.Id == id)).GetValueOrDefault();
-        }
-        private bool isMovieInvalid(Movie movie)
-        {
-            const int TOO_LONG = 8;
-            const int TOO_SHORT = 1;
-            const int START_OF_CINEMATOGRAPHY = 1890;
-            const int MIN_RATING = 0;
-            const int MAX_RATING = 10;
-
-            var movieGenre = _context.Genres.Select(x => x).Where(genre => genre.Id == movie.GenreId).ToList();
-
-            if (movie.Duration.Hour > TOO_LONG || movie.Duration.Hour < TOO_SHORT) return true;
-            if (movie.ReleaseDate.Year <= START_OF_CINEMATOGRAPHY) return true;
-            if (movie.Rating < MIN_RATING || movie.Rating > MAX_RATING) return true;
-            if (movieGenre.IsNullOrEmpty() && movie.GenreId != null) return true;
-            if (movie.GenreId != null)
-                movie.Genre = movieGenre[0];
-
-            return false;
         }
     }
 }

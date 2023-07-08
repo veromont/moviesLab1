@@ -5,11 +5,11 @@ namespace moviesAPI.Models.db;
 
 public partial class Ticket
 {
-    public string Id { get; set; } = null!;
-    public string SessionId { get; set; } = null!;
+    public Guid Id { get; set; }
+    public Guid SessionId { get; set; }
     public int SeatNumber { get; set; }
-    public decimal Price { get; set; }
+    public Guid ClientId { get; set; }
 
     [JsonIgnore]
-    public virtual Session? Session { get; set; } = null!;
+    public virtual Session? Session { get; set; }
 }

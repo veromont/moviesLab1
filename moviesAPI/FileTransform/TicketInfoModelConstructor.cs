@@ -1,13 +1,13 @@
 ﻿using moviesAPI.Models;
+using moviesAPI.Models.CinemaContext;
 using moviesAPI.Models.db;
-using moviesAPI.Models.dbContext;
 
 namespace moviesAPI.FileTransform
 {
     public class TicketInfoModelConstructor
     {
-        MovieCinemaLabContext _context;
-        public TicketInfoModelConstructor(MovieCinemaLabContext context)
+        CinemaContext _context;
+        public TicketInfoModelConstructor(CinemaContext context)
         {
             _context = context;
         }

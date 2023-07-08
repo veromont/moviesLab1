@@ -4,7 +4,7 @@ namespace moviesAPI.Models.db;
 
 public partial class Movie
 {
-    public string Id { get; set; } = null!;
+    public Guid Id { get; set; }
     public string Title { get; set; } = null!;
     public string Director { get; set; } = null!;
     public DateOnly ReleaseDate { get; set; }

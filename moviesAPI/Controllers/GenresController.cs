@@ -1,13 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Mvc;
+using moviesAPI.Repositories;
 using moviesAPI.Models.db;
-using moviesAPI.Models.dbContext;
+using moviesAPI.Validators;
 
 namespace moviesAPI.Controllers
 {
@@ -15,116 +9,92 @@ namespace moviesAPI.Controllers
     [ApiController]
     public class GenresController : ControllerBase
     {
-        private readonly MovieCinemaLabContext _context;
-
-        public GenresController(MovieCinemaLabContext context)
+        private readonly CinemaRepository _repository;
+        private readonly EntityValidator _validator;
+        private readonly EntityExistsChecker _existsChecker;
+        public GenresController(CinemaRepository repository, EntityValidator validator, EntityExistsChecker checker)
         {
-            _context = context;
+            _repository = repository;
+            _validator = validator;
+            _existsChecker = checker;
         }
 
-        [HttpGet("get-genres")]
+        [HttpGet("get-all")]
         public async Task<ActionResult<IEnumerable<Genre>>> GetGenres()
         {
-            if (_context.Genres == null)
-            {
-                return NotFound();
-            }
-            return await _context.Genres.ToListAsync();
-        }
-
-        [HttpGet("get-genre")]
-        public async Task<ActionResult<Genre>> GetGenre(int id)
-        {
-            if (_context.Genres == null)
-            {
-                return NotFound();
-            }
-            var genre = await _context.Genres.FindAsync(id);
-
-            if (genre == null)
-            {
-                return NotFound();
-            }
-
-            return genre;
-        }
-
-        [HttpPut]
-        public async Task<IActionResult> PutGenre(int id, Genre genre)
-        {
-            if (id != genre.Id)
+            var entities = await _repository.GetGenres();
+            if (entities == null)
             {
                 return BadRequest();
             }
 
-            _context.Entry(genre).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!GenreExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
+            return Ok(entities);
         }
 
-        [HttpPost]
-        public async Task<ActionResult> PostGenre(Genre genre)
+        [HttpGet("get-by-id")]
+        public async Task<ActionResult<Genre>> GetGenre(int id)
         {
-            if (_context.Genres == null) return BadRequest("Entity set 'context.Genres' is null.");
-            if (isGenreInvalid(genre)) return BadRequest("genre failed validation");
-            if (GenreExists(genre.Id)) return BadRequest("genre with this id exists");
-
-            _context.Genres.Add(genre);
-
-            try
+            var entity = await _repository.GetGenreById(id);
+            if (entity == null)
             {
-                await _context.SaveChangesAsync();
+                return BadRequest();
             }
-            catch (Exception e)
-            {
-                return BadRequest(e.Message);
-            }
+
+            return Ok(entity);
+        }
+
+        [HttpPut("update")]
+        public async Task<ActionResult> UpdateGenre(int id, Genre genre)
+        {
+            if (id != genre.Id || ! await _existsChecker.GenreExists(id)) 
+                return BadRequest();
+
+            var validationResult = _validator.isGenreInvalid(genre);
+            if (validationResult != string.Empty)
+                return BadRequest(validationResult);
+
+            var updatedSuccessfully = await _repository.UpdateGenre(id, genre);
+            if (!updatedSuccessfully)
+                return BadRequest();
+
+            var savedSuccessfully = await _repository.Save();
+            if (!savedSuccessfully)
+                return BadRequest();
 
             return Ok();
         }
 
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteGenre(int id)
+        [HttpPost("insert")]
+        public async Task<ActionResult> PostGenre(Genre genre)
         {
-            if (_context.Genres == null)
-            {
-                return NotFound();
-            }
-            var genre = await _context.Genres.FindAsync(id);
-            if (genre == null)
-            {
-                return NotFound();
-            }
+            var validationResult = _validator.isGenreInvalid(genre);
+            if (validationResult != string.Empty)
+                return BadRequest(validationResult);
 
-            _context.Genres.Remove(genre);
-            await _context.SaveChangesAsync();
+            await _repository.InsertGenre(genre);
 
-            return NoContent();
+            var savedSuccessfully = await _repository.Save();
+            if (!savedSuccessfully)
+                return BadRequest();
+
+            return Ok();
         }
 
-        private bool GenreExists(int id)
+        [HttpDelete("delete-by-id")]
+        public async Task<ActionResult> DeleteGenre(int id)
         {
-            return (_context.Genres?.Any(e => e.Id == id)).GetValueOrDefault();
-        }
-        private bool isGenreInvalid(Genre newGenre)
-        {
-            return false;
+            var deletedSuccessfully = await _repository.DeleteGenre(id);
+
+            if (deletedSuccessfully)
+            {
+                var savedSuccessfully = await _repository.Save();
+                if (!savedSuccessfully)
+                    return BadRequest();
+
+                return Ok();
+            }
+
+            return BadRequest();
         }
     }
 }
