@@ -8,8 +8,8 @@ namespace moviesAPI.Validators
     /// </summary>
     public partial class EntityValidator
     {
-        private readonly CinemaRepository repository;
-        public EntityValidator(CinemaRepository repository)
+        private readonly GenericCinemaRepository repository;
+        public EntityValidator(GenericCinemaRepository repository)
         {
             this.repository = repository;
         }
@@ -38,7 +38,7 @@ namespace moviesAPI.Validators
             const int MIN_RATING = 0;
             const int MAX_RATING = 10;
 
-            var Genres = await repository.GetGenres();
+            var Genres = await repository.Get<Genre>();
             var movieGenre = Genres.Where(genre => genre.Id == movie.GenreId).First();
 
             List<string> errorMessages = new List<string>();
@@ -64,9 +64,9 @@ namespace moviesAPI.Validators
         {
             const int MIN_PRICE = 0;
 
-            var Movies = await repository.GetMovies();
-            var Halls = await repository.GetHalls();
-            var Sessions = await repository.GetSessions();
+            var Movies = await repository.Get<Movie>();
+            var Halls = await repository.Get<Hall>();
+            var Sessions = await repository.Get<Session>();
 
             var movie = Movies.Where(s => s.Id == session.MovieId).First();
             var hall = Halls.Where(h => h.Id == session.HallId).First();
@@ -108,8 +108,8 @@ namespace moviesAPI.Validators
         }
         public async Task<string> isTicketInvalid(Ticket ticket)
         {
-            var Sessions = await repository.GetSessions();
-            var Halls = await repository.GetHalls();
+            var Sessions = await repository.Get<Session>();
+            var Halls = await repository.Get<Hall>();
 
             var ticketsSession = Sessions.Where(s => s.Id == ticket.SessionId).First();
             var ticketsHall = Halls.Where(h => h.Id == ticketsSession.HallId).First();
@@ -134,7 +134,10 @@ namespace moviesAPI.Validators
 
             return formatResult(errorMessages);
         }
-
+        public async Task<string> isClientInvalid(Client client)
+        {
+            return "";
+        }
         private string formatResult(IEnumerable<string> errorMessages)
         {
             return string.Join("\n", errorMessages);

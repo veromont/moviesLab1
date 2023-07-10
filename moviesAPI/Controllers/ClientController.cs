@@ -7,20 +7,20 @@ namespace moviesAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class GenresController : ControllerBase
+    public class ClientsController : ControllerBase
     {
         private readonly GenericCinemaRepository _repository;
         private readonly EntityValidator _validator;
-        public GenresController(GenericCinemaRepository repository, EntityValidator validator)
+        public ClientsController(GenericCinemaRepository repository, EntityValidator validator)
         {
             _repository = repository;
             _validator = validator;
         }
 
         [HttpGet("get-all")]
-        public async Task<ActionResult<IEnumerable<Genre>>> GetGenres()
+        public async Task<ActionResult<IEnumerable<Client>>> GetClients()
         {
-            var entities = await _repository.Get<Genre>();
+            var entities = await _repository.Get<Client>();
             if (entities == null)
             {
                 return BadRequest("ніц не знайдено");
@@ -30,9 +30,9 @@ namespace moviesAPI.Controllers
         }
 
         [HttpGet("get-by-id")]
-        public async Task<ActionResult<Genre>> GetGenre(int id)
+        public async Task<ActionResult<Client>> GetClient(int id)
         {
-            var entity = await _repository.GetById<Genre>(id);
+            var entity = await _repository.GetById<Client>(id);
             if (entity == null)
             {
                 return BadRequest("ніц не знайдено");
@@ -42,19 +42,20 @@ namespace moviesAPI.Controllers
         }
 
         [HttpPut("update")]
-        public async Task<ActionResult> UpdateGenre(int id, Genre genre)
+        public async Task<ActionResult> UpdateClient(string id, Client client)
         {
-            if (id != genre.Id) 
-                return BadRequest("вказано некоректний id");
+            var uuid = Guid.Parse(id);
+            if (uuid != client.Id)
+                return BadRequest("вказано некоректний uuid");
 
-            if (!await genreExists(id))
-                return BadRequest($"Жанр з id {genre.Id} не існує");
+            if (!await clientExists(uuid))
+                return BadRequest($"Жанр з id {client.Id} не існує");
 
-            var validationResult = _validator.isGenreInvalid(genre);
+            var validationResult = await _validator.isClientInvalid(client);
             if (validationResult != string.Empty)
                 return BadRequest(validationResult);
 
-            var updatedSuccessfully = await _repository.Update(id, genre);
+            var updatedSuccessfully = await _repository.Update(uuid, client);
             if (!updatedSuccessfully)
                 return BadRequest();
 
@@ -66,16 +67,16 @@ namespace moviesAPI.Controllers
         }
 
         [HttpPost("insert")]
-        public async Task<ActionResult> InsertGenre(Genre genre)
+        public async Task<ActionResult> InsertClient(Client client)
         {
-            if (await genreExists(genre.Id))
-                return BadRequest($"Жанр з id {genre.Id} уже існує");
+            if (await clientExists(client.Id))
+                return BadRequest($"Жанр з id {client.Id} уже існує");
 
-            var validationResult = _validator.isGenreInvalid(genre);
+            var validationResult = await _validator.isClientInvalid(client);
             if (validationResult != string.Empty)
                 return BadRequest(validationResult);
 
-            await _repository.Insert(genre);
+            await _repository.Insert(client);
 
             var savedSuccessfully = await _repository.Save();
             if (!savedSuccessfully)
@@ -85,12 +86,12 @@ namespace moviesAPI.Controllers
         }
 
         [HttpDelete("delete-by-id")]
-        public async Task<ActionResult> DeleteGenre(int id)
+        public async Task<ActionResult> DeleteClient(string id)
         {
-            if (!await genreExists(id))
+            if (!await clientExists(id))
                 return BadRequest($"Жанр з id {id} не існує");
 
-            var deletedSuccessfully = await _repository.Delete<Genre>(id);
+            var deletedSuccessfully = await _repository.Delete<Client>(id);
 
             if (deletedSuccessfully)
             {
@@ -103,9 +104,10 @@ namespace moviesAPI.Controllers
 
             return BadRequest();
         }
-        private async Task<bool> genreExists(int id)
+        private async Task<bool> clientExists(Guid id)
         {
-            return await _repository.GetById<Genre>(id) != null;
+            return await _repository.GetById<Client>(id) != null;
         }
     }
 }
+

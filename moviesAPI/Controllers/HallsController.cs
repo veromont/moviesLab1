@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using moviesAPI.Repositories;
 using moviesAPI.Models.db;
 using moviesAPI.Validators;
+using System;
 
 namespace moviesAPI.Controllers
 {
@@ -10,20 +10,18 @@ namespace moviesAPI.Controllers
     [ApiController]
     public class HallsController : ControllerBase
     {
-        private readonly CinemaRepository _repository;
+        private readonly GenericCinemaRepository _repository;
         private readonly EntityValidator _validator;
-        private readonly EntityExistsChecker _existsChecker; //TODO: implement
-        public HallsController(CinemaRepository repository, EntityValidator validator, EntityExistsChecker checker)
+        public HallsController(GenericCinemaRepository repository, EntityValidator validator)
         {
             _repository = repository;
             _validator = validator;
-            _existsChecker = checker;
         }
 
         [HttpGet("get-all")]
         public async Task<ActionResult<IEnumerable<Hall>>> GetHalls()
         {
-            var entities = await _repository.GetHalls();
+            var entities = await _repository.Get<Hall>();
             if (entities == null)
                 return BadRequest();
 
@@ -33,7 +31,7 @@ namespace moviesAPI.Controllers
         [HttpGet("get-by-id")]
         public async Task<ActionResult<Hall>> GetHall(int id)
         {
-            var entity = await _repository.GetHallById(id);
+            var entity = await _repository.GetById<Hall>(id);
             if (entity == null)
             {
                 return BadRequest();
@@ -45,6 +43,9 @@ namespace moviesAPI.Controllers
         [HttpPut("update")]
         public async Task<ActionResult> UpdateHall(int id, Hall hall)
         {
+            if (!await hallExists(id))
+                return BadRequest($"Зал з id {hall.Id} не існує");
+
             if (id != hall.Id)
                 return BadRequest();
 
@@ -52,7 +53,7 @@ namespace moviesAPI.Controllers
             if (validationResult != string.Empty)
                 return BadRequest(validationResult);
 
-            var updatedSuccessfully = await _repository.UpdateHall(id, hall);
+            var updatedSuccessfully = await _repository.Update(id, hall);
             if (!updatedSuccessfully)
                 return BadRequest();
 
@@ -66,11 +67,14 @@ namespace moviesAPI.Controllers
         [HttpPost("insert")]
         public async Task<ActionResult> PostHall(Hall hall)
         {
+            if (await hallExists(id))
+                return BadRequest($"Зал з id {hall.Id} уже існує");
+
             var validationResult = _validator.isHallInvalid(hall);
             if (validationResult != string.Empty)
                 return BadRequest(validationResult);
 
-            await _repository.InsertHall(hall);
+            await _repository.Insert(hall);
 
             var savedSuccessfully = await _repository.Save();
             if (!savedSuccessfully)
@@ -82,7 +86,10 @@ namespace moviesAPI.Controllers
         [HttpDelete("delete-by-id")]
         public async Task<ActionResult> DeleteHall(int id)
         {
-            var deletedSuccessfully = await _repository.DeleteHall(id);
+            if (!await hallExists(id))
+                return BadRequest($"Зал з id {id} не існує");
+
+            var deletedSuccessfully = await _repository.Delete<Hall>(id);
 
             if (deletedSuccessfully)
             {
@@ -95,6 +102,9 @@ namespace moviesAPI.Controllers
 
             return BadRequest();
         }
-
+        private Task<bool> hallExists(int id)
+        {
+            return _repository.EntityExists<Hall>(id);
+        }
     }
 }

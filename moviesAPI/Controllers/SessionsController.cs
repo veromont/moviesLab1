@@ -1,9 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using moviesAPI.Interfaces;
 using moviesAPI.Models;
-using moviesAPI.Models.CinemaContext;
 using moviesAPI.Models.db;
+using moviesAPI.Repositories;
+using moviesAPI.Validators;
 
 namespace moviesAPI.Controllers
 {
@@ -11,108 +10,141 @@ namespace moviesAPI.Controllers
     [ApiController]
     public class SessionsController : ControllerBase
     {
-        private readonly CinemaContext _context;
-        private readonly ISessionFilterService _filterService;
-        public SessionsController(CinemaContext context, ISessionFilterService filterService)
+        private readonly GenericCinemaRepository _repository;
+        private readonly EntityValidator _validator;
+
+        public SessionsController(GenericCinemaRepository repository, EntityValidator validator)
         {
-            _context = context;
-            _filterService = filterService;
+            _repository = repository;
+            _validator = validator;
         }
 
         [HttpGet("get-served-sessions")]
         public async Task<ActionResult<IEnumerable<ServedSession>>> GetServedSessions()
         {
-            if (_context.Sessions == null) return NotFound();
+            var sessions = await _repository.Get<Session>();
             var res = new List<ServedSession>();
-            foreach (var session in _context.Sessions) 
+
+            foreach (var session in sessions) 
             {
-                var movieName = _context.Movies.Find(session.MovieId).Title;
-                var hallName = _context.Halls.Find(session.HallId).Name;
-                ServedSession temp = new ServedSession(session,movieName,hallName);
+                var movie = await _repository.GetById<Movie>(session.MovieId);
+                var hall = await _repository.GetById<Hall>(session.HallId);
+                if (movie == null || hall == null)
+                {
+                    continue;
+                }
+                ServedSession temp = new ServedSession(session, movie.Title, hall.Name);
                 res.Add(temp);
             }
             return res;
         }
 
-        [HttpGet("get-sessions")]
+        [HttpGet("get-all")]
         public async Task<ActionResult<IEnumerable<Session>>> GetSessions()
         {
-            if (_context.Sessions == null) return NotFound();
-            return await _context.Sessions.ToListAsync();
+            var entities = await _repository.Get<Session>();
+            if (entities == null)
+                return BadRequest();
+
+            return Ok(entities);
         }
 
-        [HttpPut]
-        public async Task<IActionResult> PutSession(string id, Session session)
+        [HttpPut("update")]
+        public async Task<ActionResult> UpdateSession(string id, Session session)
         {
-            if (id != session.Id) return BadRequest();
-            if (!SessionExists(id)) return NotFound();
-            _context.Entry(session).State = EntityState.Modified;
-            await _context.SaveChangesAsync();
-            return NoContent();
-        }
+            var uuid = Guid.Parse(id);
+            if (uuid != session.Id)
+                return BadRequest();
 
-        [HttpPost]
-        public async Task<ActionResult> PostSession(Session session)
-        {
-            if (_context.Sessions == null) return Problem("Entity set 'context.Sessions' is null.");
-            if (SessionExists(session.Id)) return BadRequest($"session with id {session.Id} already exists");
-            try
-            {
-                if (isSessionInvalid(session) != "") return BadRequest(isSessionInvalid(session));
-            }
-            catch
-            {
-                return BadRequest("неочікувана помилка, скоріше за все некоректні дати");
-            }
+            if (!await sessionExists(session.Id.ToString()))
+                return BadRequest($"Сеансу з id {session.Id} не існує");
 
-            _context.Sessions.Add(session);
+            var validationResult = await _validator.isSessionInvalid(session);
+            if (validationResult != string.Empty)
+                return BadRequest(validationResult);
 
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (Exception e)
-            {
-                return BadRequest(e.Message);
-            }
+            var updatedSuccessfully = await _repository.Update(uuid, session);
+            if (!updatedSuccessfully)
+                return BadRequest();
+
+            var savedSuccessfully = await _repository.Save();
+            if (!savedSuccessfully)
+                return BadRequest();
 
             return Ok();
         }
 
-        [HttpDelete]
+        [HttpPost("insert")]
+        public async Task<ActionResult> InsertSession(Session session)
+        {
+            if (await sessionExists(session.Id.ToString()))
+                return BadRequest($"Сеанс з id {session.Id} уже існує");
+
+            var validationResult = await _validator.isSessionInvalid(session);
+            if (validationResult != string.Empty)
+                return BadRequest(validationResult);
+
+            await _repository.Insert(session);
+
+            var savedSuccessfully = await _repository.Save();
+            if (!savedSuccessfully)
+                return BadRequest();
+
+            return Ok();
+        }
+
+        [HttpDelete("delete-by-id")]
         public async Task<ActionResult> DeleteSession(string id)
         {
-            if (_context.Sessions == null) return NotFound();
-            var session = await _context.Sessions.FindAsync(id);
-            if (session == null) return NotFound();
+            if (!await sessionExists(id))
+                return BadRequest($"Сеансу з id {id} не існує");
 
-            _context.Sessions.Remove(session);
+            var deletedSuccessfully = await _repository.Delete<Session>(Guid.Parse(id));
 
-            await _context.SaveChangesAsync();
+            if (deletedSuccessfully)
+            {
+                var savedSuccessfully = await _repository.Save();
+                if (!savedSuccessfully)
+                    return BadRequest();
 
-            return Ok();
+                return Ok();
+            }
+
+            return BadRequest();
         }
 
         [HttpPost("get-by-date")]
         public async Task<ActionResult<IEnumerable<Session>>> GetByDate(DateOnly date)
         {
-            return Ok(_filterService.getSessionsByDay(_context, date));
+            var sessions = await _repository.Get<Session>();
+            var result = from s in sessions
+                         where s.StartTime.Year == date.Year && s.StartTime.Month == date.Month && s.StartTime.Day == date.Day
+                         select s;
+            return result.ToArray();
         }
 
         [HttpPost("get-by-date-interval")]
         public async Task<ActionResult<IEnumerable<Session>>> GetByDateInterval(DateTime dateFrom, DateTime dateTo)
         {
-            return Ok(_filterService.getSessionsByDateInterval(_context, dateFrom, dateTo));
+            var sessions = await _repository.Get<Session>();
+            var result = from s in sessions
+                         where s.StartTime <= dateTo && s.StartTime >= dateFrom
+                         select s;
+            return result.ToArray();
         }
 
         [HttpPost("get-by-movieId")]
         public async Task<ActionResult<IEnumerable<Session>>> GetByMovie(string movieId)
         {
-            return Ok(_filterService.getSessionsByMovie(_context, movieId));
+            var sessions = await _repository.Get<Session>();
+            var result = from s in sessions
+                         where s.MovieId.ToString() == movieId
+                         select s;
+            return result.ToArray();
         }
-        private bool SessionExists(string id)
+        private Task<bool> sessionExists(string id)
         {
-            return (_context.Sessions?.Any(e => e.Id == id)).GetValueOrDefault();
+            return _repository.EntityExists<Session>(Guid.Parse(id));
         }
     }
 }

@@ -1,10 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using moviesAPI.Models.CinemaContext;
+using moviesAPI.Models;
 using moviesAPI.Models.db;
 using moviesAPI.Repositories;
 using moviesAPI.Validators;
-using NuGet.Protocol.Core.Types;
 
 namespace moviesAPI.Controllers
 {
@@ -12,21 +11,19 @@ namespace moviesAPI.Controllers
     [ApiController]
     public class MoviesController : ControllerBase
     {
-        private readonly CinemaRepository _repository;
+        private readonly GenericCinemaRepository _repository;
         private readonly EntityValidator _validator;
-        private readonly EntityExistsChecker _existsChecker;
 
-        public MoviesController(CinemaRepository repository, EntityValidator validator, EntityExistsChecker checker)
+        public MoviesController(GenericCinemaRepository repository, EntityValidator validator)
         {
             _repository = repository;
             _validator = validator;
-            _existsChecker = checker;
         }
 
         [HttpGet("get-all")]
         public async Task<ActionResult<IEnumerable<Movie>>> GetMovies()
         {
-            var entities = await _repository.GetMovies();
+            var entities = await _repository.Get<Movie>();
             if (entities == null)
                 return BadRequest();
 
@@ -36,7 +33,7 @@ namespace moviesAPI.Controllers
         [HttpGet("get-by-id")]
         public async Task<ActionResult<Movie>> GetMovie(string id)
         {
-            var entity = await _repository.GetMovieById(Guid.Parse(id));
+            var entity = await _repository.GetById<Movie>(Guid.Parse(id));
             if (entity == null)
             {
                 return BadRequest();
@@ -46,113 +43,102 @@ namespace moviesAPI.Controllers
         }
 
         [HttpPut("update")]
-        public async Task<ActionResult> PutMovie(string id, Movie movie)
+        public async Task<ActionResult> UpdateMovie(string id, Movie movie)
         {
-            if (id != movie.Id)
-            {
+            var uuid = Guid.Parse(id); // TODO: uuid parsing global method
+            if (uuid != movie.Id)
                 return BadRequest();
-            }
 
-            _context.Entry(movie).State = EntityState.Modified;
+            if (!await movieExists(movie.Id.ToString()))
+                return BadRequest($"Фільм з id {movie.Id} не існує");
 
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!MovieExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+            var validationResult = await _validator.isMovieInvalid(movie);
+            if (validationResult != string.Empty)
+                return BadRequest(validationResult);
 
-            return NoContent();
-        }
+            var updatedSuccessfully = await _repository.Update(uuid, movie);
+            if (!updatedSuccessfully)
+                return BadRequest();
 
-        [HttpDelete("delete-by-id")]
-        public async Task<IActionResult> DeleteMovie(string id)
-        {
-            if (_context.Movies == null)
-            {
-                return NotFound();
-            }
-            var movie = await _context.Movies.FindAsync(id);
-            if (movie == null)
-            {
-                return NotFound();
-            }
-
-            _context.Movies.Remove(movie);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
-        }
-        
-        [HttpPost]
-        public async Task<ActionResult> CreateMovie(Movie movie)
-        {
-            if (_context.Movies == null) 
-                return BadRequest("Entity set 'context.Movies' is null.");
-            if (isMovieInvalid(movie) != "") 
-                return BadRequest(isMovieInvalid(movie));
-            if (MovieExists(movie.Id))
-                return BadRequest($"movie with id '{movie.Id}' already exists");
-
-            _context.Movies.Add(movie);
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch(Exception e)
-            {
-                return BadRequest(e.Message);
-            }
+            var savedSuccessfully = await _repository.Save();
+            if (!savedSuccessfully)
+                return BadRequest();
 
             return Ok();
         }
 
-        [HttpPost("date")]
-        public ActionResult MoviesThisDay(DateOnly date)
+        [HttpDelete("delete-by-id")]
+        public async Task<ActionResult> DeleteMovie(string id)
         {
-            return Ok(_filterService.getMoviesByDay(_context, date));
+            if (!await movieExists(id))
+                return BadRequest($"Фільм з id {id} не існує");
+
+            var deletedSuccessfully = await _repository.Delete<Movie>(Guid.Parse(id));
+
+            if (deletedSuccessfully)
+            {
+                var savedSuccessfully = await _repository.Save();
+                if (!savedSuccessfully)
+                    return BadRequest();
+
+                return Ok();
+            }
+
+            return BadRequest();
         }
-        public struct dateIntervalModel
+        
+        [HttpPost("insert")]
+        public async Task<ActionResult> InsertMovie(Movie movie)
         {
-            public DateOnly dateFrom { get; set; }
-            public DateOnly dateTo { get; set; }
+            if (await movieExists(movie.Id.ToString()))
+                return BadRequest($"Фільм з id {movie.Id} уже існує");
+
+            var validationResult = await _validator.isMovieInvalid(movie);
+            if (validationResult != string.Empty)
+                return BadRequest(validationResult);
+
+            await _repository.Insert(movie);
+
+            var savedSuccessfully = await _repository.Save();
+            if (!savedSuccessfully)
+                return BadRequest();
+
+            return Ok();
         }
-        [HttpPost("date-interval")]
-        public ActionResult MoviesThisInterval(dateIntervalModel interval)
+        [HttpPost("get-by-date")]
+        public async Task<ActionResult<IEnumerable<Movie>>> MoviesThisDay(DateOnly date)
+        {
+            var movies = await _repository.Get<Movie>();
+            var result = from m in movies
+                         where m.ReleaseDate.Day == date.Day && m.ReleaseDate.Month == date.Month
+                         select m;
+            return result.ToArray();
+        }
+
+        [HttpPost("get-by-date-interval")]
+        public async Task<ActionResult<IEnumerable<Movie>>> MoviesThisInterval(DateOnlyIntervalModel interval)
         {
             DateOnly dateFrom = interval.dateFrom;
             DateOnly dateTo = interval.dateTo;
-            return Ok(_filterService.getMoviesByDateInterval(_context,dateFrom, dateTo));
+            var movies = await _repository.Get<Movie>();
+            var result = from m in movies
+                         where m.ReleaseDate >= dateFrom && m.ReleaseDate <= dateTo
+                         select m;
+            return result.ToArray();
         }
 
-        [HttpPost("genres")]
-        public ActionResult MoviesByGenres(int?[] genresId)
+        [HttpPost("get-by-genres")]
+        public async Task<ActionResult<IEnumerable<Movie>>> MoviesByGenres(int?[] genresIds)
         {
-            var movies = new List<Movie>();
-            foreach (var id in genresId)
-            {
-                var res = _filterService.getMoviesByGenres(_context, id);
-                foreach (var m in res)
-                {
-                    if (!movies.Contains(m))
-                        movies.Add(m);
-                }
-            }
-            return Ok(movies);
+            var movies = await _repository.Get<Movie>();
+            var result = from m in movies
+                         where genresIds.Contains(m.GenreId)
+                         select m;
+            return result.ToArray();
         }
-        private bool MovieExists(Guid id)
+        private Task<bool> movieExists(string id)
         {
-            return (_context.Movies?.Any(e => e.Id == id)).GetValueOrDefault();
+            return _repository.EntityExists<Movie>(Guid.Parse(id));
         }
     }
 }

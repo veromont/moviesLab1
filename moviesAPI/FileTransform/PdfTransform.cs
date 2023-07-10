@@ -44,7 +44,7 @@ namespace moviesAPI.FileTransform
                 addTableRow(PdfTicketModel.TranslationMap[nameof(ticket.SeatNumber)], ticket.SeatNumber.ToString());
                 addTableRow(PdfTicketModel.TranslationMap[nameof(ticket.Price)], ticket.Price.ToString());
                 addTableRow(PdfTicketModel.TranslationMap[nameof(ticket.HallName)], ticket.HallName.ToString());
-                addTableRow(PdfTicketModel.TranslationMap[nameof(ticket.Time)], ticket.Time.ToString());
+                addTableRow(PdfTicketModel.TranslationMap[nameof(ticket.StartTime)], ticket.StartTime.ToString());
 
                 addQrCode($"Ticket id = {ticket.Id}\nSession id = {ticket.SessionId}");
 

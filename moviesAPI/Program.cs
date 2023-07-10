@@ -41,7 +41,7 @@ builder.Services.AddCors(options =>
         });
 });
 
-builder.Services.AddSingleton<CinemaRepository>();
+builder.Services.AddSingleton<GenericCinemaRepository>();
 builder.Services.AddEndpointsApiExplorer();
 
 //resolve fonts once

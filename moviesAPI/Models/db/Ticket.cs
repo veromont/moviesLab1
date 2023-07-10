@@ -12,4 +12,5 @@ public partial class Ticket
 
     [JsonIgnore]
     public virtual Session? Session { get; set; }
+    public virtual Client? Client { get; set; }
 }

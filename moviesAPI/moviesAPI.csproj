@@ -52,4 +52,9 @@
     <EmbeddedResource Include="fonts\constantia\constanz.ttf" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Material\" />
+    <Folder Include="Services\" />
+  </ItemGroup>
+
 </Project>

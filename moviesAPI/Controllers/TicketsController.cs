@@ -1,8 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+﻿using moviesAPI.Models;
+using Microsoft.AspNetCore.Mvc;
 using moviesAPI.FileTransform;
 using moviesAPI.Models.db;
-using moviesAPI.Models.CinemaContext;
+using moviesAPI.Repositories;
+using moviesAPI.Validators;
 
 namespace moviesAPI.Controllers
 {
@@ -10,146 +11,128 @@ namespace moviesAPI.Controllers
     [ApiController]
     public class TicketsController : ControllerBase
     {
-        private readonly CinemaContext _context;
-        private readonly PdfTransform pdfTransform;
-        private readonly TicketInfoModelConstructor ticketModelConstructor;
-        public TicketsController(CinemaContext context)
+        private readonly GenericCinemaRepository _repository;
+        private readonly EntityValidator _validator;
+        private readonly PdfTransform _pdfTransformer;
+        public TicketsController(GenericCinemaRepository repository, EntityValidator validator, PdfTransform pdfTransformer)
         {
-            _context = context;
-            pdfTransform = new PdfTransform();
-            ticketModelConstructor = new TicketInfoModelConstructor(context);
+            _repository = repository;
+            _validator = validator;
+            _pdfTransformer = pdfTransformer;
         }
 
-        [HttpGet("get-tickets")]
-        public async Task<ActionResult<IEnumerable<Ticket>>> GetTickets()
+        [HttpGet("get-all")]
+        public async Task<ActionResult<IEnumerable<Ticket>>> GetSessions()
         {
-            if (_context.Tickets == null) return NotFound();
-            return await _context.Tickets.ToListAsync();
+            var entities = await _repository.Get<Ticket>();
+            if (entities == null)
+                return BadRequest();
+
+            return Ok(entities);
         }
 
-        [HttpGet("get-ticket")]
-        public async Task<ActionResult<Ticket>> GetTicket(string id)
+        [HttpPut("update")]
+        public async Task<ActionResult> UpdateTickets(string id, Session ticket)
         {
-            if (_context.Tickets == null)
-                return NotFound();
-            var ticket = await _context.Tickets.FindAsync(id);
+            var uuid = Guid.Parse(id);
+            if (uuid != ticket.Id)
+                return BadRequest();
 
-            if (ticket == null)
-                return NotFound();
+            if (!await ticketExists(ticket.Id.ToString()))
+                return BadRequest($"Квитка з id {ticket.Id} не існує");
 
-            return ticket;
-        }
+            var validationResult = await _validator.isSessionInvalid(ticket);
+            if (validationResult != string.Empty)
+                return BadRequest(validationResult);
 
-        [HttpPut]
-        public async Task<IActionResult> PutTicket(string id, Ticket ticket)
-        {
-            if (id != ticket.Id) return BadRequest();
-            if (!TicketExists(id)) return NotFound();
+            var updatedSuccessfully = await _repository.Update(uuid, ticket);
+            if (!updatedSuccessfully)
+                return BadRequest();
 
-            _context.Entry(ticket).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (Exception e)
-            {
-                return BadRequest(e.Message);
-            }
-            return NoContent();
-        }
-
-        [HttpPost("create-ticket")]
-        public async Task<ActionResult> PostTicket(Ticket ticket)
-        {
-            if (ticket.Id == null)
-                ticket.Id = Guid.NewGuid().ToString();
-            if (_context.Tickets == null)
-                return BadRequest("Entity set 'context.Tickets' is null.");
-            if (TicketExists(ticket.Id))
-                return BadRequest($"ticket with id {ticket.Id} exists");
-            if (isTicketInvalid(ticket))
-                return BadRequest($"ticket failed validation");
-
-            _context.Tickets.Add(ticket);
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (Exception e)
-            {
-                return BadRequest(e.Message);
-            }
+            var savedSuccessfully = await _repository.Save();
+            if (!savedSuccessfully)
+                return BadRequest();
 
             return Ok();
         }
-        [HttpPost("book-ticket")]
-        public async Task<ActionResult> BookTicket(string sessionId)
+
+        [HttpPost("insert")]
+        public async Task<ActionResult> InsertTicket(Ticket ticket)
         {
-            const int MAX_HALL_SIZE = 1000;
-            const int DEFAULT_TICKET_PRICE = 100;
-            if (_context.Tickets == null)
-                return BadRequest("Entity set 'context.Tickets' is null.");
+            if (await ticketExists(ticket.Id.ToString()))
+                return BadRequest($"Квиток з id {ticket.Id} уже існує");
 
-            var session = _context.Sessions.Find(sessionId);
-            var bookedTickets = (from t in _context.Tickets where t.SessionId == sessionId select t).ToList();
-            var ticket = new Ticket();
-            ticket.Id = Guid.NewGuid().ToString();
-            for (int i = 1; i < MAX_HALL_SIZE; i++)
-            {
-                var tickets = from t in bookedTickets where t.SeatNumber == i select t;
-                if (tickets.Count() == 0)
-                {
-                    ticket.SeatNumber = i;
-                    break;
-                }
-            }
-            ticket.Price = DEFAULT_TICKET_PRICE;
-            ticket.SessionId = sessionId;
+            var validationResult = await _validator.isTicketInvalid(ticket);
+            if (validationResult != string.Empty)
+                return BadRequest(validationResult);
 
-            _context.Tickets.Add(ticket);
+            await _repository.Insert(ticket);
 
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (Exception e)
-            {
-                return BadRequest(e.Message);
-            }
+            var savedSuccessfully = await _repository.Save();
+            if (!savedSuccessfully)
+                return BadRequest();
 
-            return Ok(ticket.Id);
+            return Ok();
         }
 
-        [HttpDelete]
-        public async Task<IActionResult> DeleteTicket(string id)
+        [HttpDelete("delete-by-id")]
+        public async Task<ActionResult> DeleteTicket(string id)
         {
-            if (_context.Tickets == null) return NotFound();
-            var ticket = await _context.Tickets.FindAsync(id);
-            if (ticket == null) return NotFound();
+            if (!await ticketExists(id))
+                return BadRequest($"Квитка з id {id} не існує");
 
-            _context.Tickets.Remove(ticket);
+            var deletedSuccessfully = await _repository.Delete<Ticket>(Guid.Parse(id));
 
-            await _context.SaveChangesAsync();
+            if (deletedSuccessfully)
+            {
+                var savedSuccessfully = await _repository.Save();
+                if (!savedSuccessfully)
+                    return BadRequest();
 
-            return NoContent();
+                return Ok();
+            }
+
+            return BadRequest();
         }
 
-        [HttpPost("get-pdf-ticket")]
-        public FileStreamResult GetTicketAsPDF(string ticketId)
+        [HttpPost("get-pdf")]
+        public async Task<ActionResult<FileStream>> GetTicketAsPDF(string ticketId)
         {
+            var uuid = Guid.Parse(ticketId);
             var fileName = "ticket.pdf";
             var contentType = "application/pdf";
-            var t = _context.Tickets.Find(ticketId);
-            var ticketInfo = ticketModelConstructor.getpdfTicketModel(t);
-            var memoryStream = pdfTransform.TransformTicketToPdf(ticketInfo);
+
+            var ticket = await _repository.GetById<Ticket>(uuid);
+            if (ticket == null)
+            {
+                return BadRequest(); 
+            }
+
+            var session = ticket.Session;
+            if (session == null)
+            {
+                return BadRequest();
+            }
+
+            var movie = await _repository.GetById<Movie>(session.MovieId);
+            if (movie == null)
+            {
+                return BadRequest();
+            }
+
+            var hall = await _repository.GetById<Hall>(session.HallId);
+            if (hall == null)
+            {
+                return BadRequest();
+            }
+            var ticketInfo = new PdfTicketModel(ticket, movie.Title, session.StartTime.ToString(), session.EndTime.ToString(), hall.Name);
+            var memoryStream = _pdfTransformer.TransformTicketToPdf(ticketInfo);
             return File(memoryStream, contentType, fileName);
         }
 
-        private bool TicketExists(string id)
+        private Task<bool> ticketExists(string id)
         {
-            return (_context.Tickets?.Any(e => e.Id == id)).GetValueOrDefault();
+            return _repository.EntityExists<Movie>(Guid.Parse(id));
         }
     }
 }
