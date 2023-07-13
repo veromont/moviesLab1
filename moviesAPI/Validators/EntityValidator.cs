@@ -134,7 +134,7 @@ namespace moviesAPI.Validators
 
             return formatResult(errorMessages);
         }
-        public async Task<string> isClientInvalid(Client client)
+        public async Task<string> isClientInvalid(Client client) //TODO: implement client validation
         {
             return "";
         }

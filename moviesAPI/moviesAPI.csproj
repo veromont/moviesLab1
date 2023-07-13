@@ -54,7 +54,7 @@
 
   <ItemGroup>
     <Folder Include="Material\" />
-    <Folder Include="Services\" />
+    <Folder Include="Views\" />
   </ItemGroup>
 
 </Project>

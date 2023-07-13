@@ -19,6 +19,7 @@ public partial class CinemaContext : DbContext
     public virtual DbSet<Session> Sessions { get; set; }
     public virtual DbSet<Ticket> Tickets { get; set; }
     public virtual DbSet<Genre> Genres { get; set; }
+    public virtual DbSet<Client> Clients { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -46,6 +47,32 @@ public partial class CinemaContext : DbContext
             entity.Property(e => e.ReleaseDate).HasColumnName("releaseDate");
             entity.Property(e => e.Rating).HasColumnName("rating");
             entity.Property(e => e.GenreId).HasColumnName("genreId");
+        });
+        modelBuilder.Entity<Ticket>(entity =>
+        {
+            entity.ToTable("tickets");
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.SessionId).HasColumnName("sessionId");
+            entity.Property(e => e.ClientId).HasColumnName("clientId");
+            entity.Property(e => e.SeatNumber).HasColumnName("seatNumber");
+        });
+        modelBuilder.Entity<Client>(entity =>
+        {
+            entity.ToTable("clients");
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Name).HasColumnName("name");
+            entity.Property(e => e.Email).HasColumnName("email");
+            entity.Property(e => e.Password).HasColumnName("password");
+        });
+        modelBuilder.Entity<Session>(entity =>
+        {
+            entity.ToTable("sessions");
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.MovieId).HasColumnName("movieId");
+            entity.Property(e => e.StartTime).HasColumnName("startTime");
+            entity.Property(e => e.EndTime).HasColumnName("endTime");
+            entity.Property(e => e.HallId).HasColumnName("hallId");
+            entity.Property(e => e.Price).HasColumnName("price");
         });
         OnModelCreatingPartial(modelBuilder);
     }

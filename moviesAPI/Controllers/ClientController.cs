@@ -44,12 +44,14 @@ namespace moviesAPI.Controllers
         [HttpPut("update")]
         public async Task<ActionResult> UpdateClient(string id, Client client)
         {
-            var uuid = Guid.Parse(id);
+            if (!Guid.TryParse(id, out var uuid))
+                return BadRequest("Некоректний формат id");
+
             if (uuid != client.Id)
                 return BadRequest("вказано некоректний uuid");
 
             if (!await clientExists(uuid))
-                return BadRequest($"Жанр з id {client.Id} не існує");
+                return BadRequest($"Клієнта з id {client.Id} не існує");
 
             var validationResult = await _validator.isClientInvalid(client);
             if (validationResult != string.Empty)
@@ -70,7 +72,7 @@ namespace moviesAPI.Controllers
         public async Task<ActionResult> InsertClient(Client client)
         {
             if (await clientExists(client.Id))
-                return BadRequest($"Жанр з id {client.Id} уже існує");
+                return BadRequest($"Клієнт з id {client.Id} уже існує");
 
             var validationResult = await _validator.isClientInvalid(client);
             if (validationResult != string.Empty)
@@ -88,10 +90,13 @@ namespace moviesAPI.Controllers
         [HttpDelete("delete-by-id")]
         public async Task<ActionResult> DeleteClient(string id)
         {
-            if (!await clientExists(id))
-                return BadRequest($"Жанр з id {id} не існує");
+            if (!Guid.TryParse(id, out var uuid))
+                return BadRequest("Некоректний формат id");
 
-            var deletedSuccessfully = await _repository.Delete<Client>(id);
+            if (!await clientExists(uuid))
+                return BadRequest($"Клієнта з id {id} не існує");
+
+            var deletedSuccessfully = await _repository.Delete<Client>(uuid);
 
             if (deletedSuccessfully)
             {

@@ -56,11 +56,11 @@ namespace moviesAPI.Controllers
 
             var updatedSuccessfully = await _repository.Update(id, genre);
             if (!updatedSuccessfully)
-                return BadRequest();
+                return BadRequest("Не вдалося оновити");
 
             var savedSuccessfully = await _repository.Save();
             if (!savedSuccessfully)
-                return BadRequest();
+                return BadRequest("Не вдалося зберегти");
 
             return Ok();
         }

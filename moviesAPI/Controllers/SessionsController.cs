@@ -50,13 +50,15 @@ namespace moviesAPI.Controllers
         }
 
         [HttpPut("update")]
-        public async Task<ActionResult> UpdateSession(string id, Session session)
+        public async Task<ActionResult> UpdateSession(string id, Session session) //TODO: REWORK UPDATE
         {
-            var uuid = Guid.Parse(id);
+            if (!Guid.TryParse(id, out var uuid))
+                return BadRequest("Некоректний формат id");
+
             if (uuid != session.Id)
                 return BadRequest();
 
-            if (!await sessionExists(session.Id.ToString()))
+            if (!await sessionExists(uuid))
                 return BadRequest($"Сеансу з id {session.Id} не існує");
 
             var validationResult = await _validator.isSessionInvalid(session);
@@ -77,7 +79,7 @@ namespace moviesAPI.Controllers
         [HttpPost("insert")]
         public async Task<ActionResult> InsertSession(Session session)
         {
-            if (await sessionExists(session.Id.ToString()))
+            if (await sessionExists(session.Id))
                 return BadRequest($"Сеанс з id {session.Id} уже існує");
 
             var validationResult = await _validator.isSessionInvalid(session);
@@ -96,10 +98,13 @@ namespace moviesAPI.Controllers
         [HttpDelete("delete-by-id")]
         public async Task<ActionResult> DeleteSession(string id)
         {
-            if (!await sessionExists(id))
+            if (!Guid.TryParse(id, out var uuid))
+                return BadRequest("Некоректний формат id");
+
+            if (!await sessionExists(uuid))
                 return BadRequest($"Сеансу з id {id} не існує");
 
-            var deletedSuccessfully = await _repository.Delete<Session>(Guid.Parse(id));
+            var deletedSuccessfully = await _repository.Delete<Session>(uuid);
 
             if (deletedSuccessfully)
             {
@@ -142,9 +147,9 @@ namespace moviesAPI.Controllers
                          select s;
             return result.ToArray();
         }
-        private Task<bool> sessionExists(string id)
+        private Task<bool> sessionExists(Guid id)
         {
-            return _repository.EntityExists<Session>(Guid.Parse(id));
+            return _repository.EntityExists<Session>(id);
         }
     }
 }

@@ -5,7 +5,6 @@ namespace moviesAPI.Repositories
 {
     /// <summary>
     ///  Provides access to the database via CRUD operations and some custom ones
-    ///  ugly, refactor soon!!!
     /// </summary>
     public partial class GenericCinemaRepository : IDisposable
     {
@@ -39,6 +38,7 @@ namespace moviesAPI.Repositories
             if (modifiedEntity == null)
                 return false;
 
+            context.Entry(modifiedEntity).CurrentValues.SetValues(entity);
             context.Entry(entity).State = EntityState.Modified;
             return true;
         }
@@ -48,6 +48,7 @@ namespace moviesAPI.Repositories
             if (modifiedEntity == null)
                 return false;
 
+            context.Entry(modifiedEntity).CurrentValues.SetValues(entity);
             context.Entry(entity).State = EntityState.Modified;
             return true;
         }
@@ -106,6 +107,5 @@ namespace moviesAPI.Repositories
             Dispose(true);
             GC.SuppressFinalize(this);
         }
-
     }
 }

@@ -4,16 +4,16 @@ using PdfSharp.Pdf;
 
 namespace moviesAPI.FileTransform
 {
-    public class PdfTransform
+    public class PdfBuilder
     {
-        XGraphics gfx;
+        public XGraphics gfx;
         PdfPage page;
         PdfDocument document;
         XRect currentRect;
         bool isRowOdd;
-        public PdfTransform() 
+        public PdfBuilder(PdfDocument document) 
         {
-            document = new PdfDocument();
+            this.document = document;
             page = document.AddPage();
             page.Width = new XUnit(200,XGraphicsUnit.Millimeter);
             page.Height = new XUnit(180, XGraphicsUnit.Millimeter);
@@ -28,34 +28,13 @@ namespace moviesAPI.FileTransform
             currentRect = new XRect(tableX, tableY, columnWidth, rowHeight);
             isRowOdd = true;
         }
-        public MemoryStream TransformTicketToPdf(PdfTicketModel ticket)
+        public void addHeader(XFont headerFont)
         {
-            using (var ms = new MemoryStream())
-            {
-
-                var headerFont = new XFont("Constantia", 24, XFontStyleEx.Bold);
-                var regularFont = new XFont("Constantia", 20, XFontStyleEx.Regular);
-
-                gfx.DrawString("Квиток", headerFont, XBrushes.Black,
+            gfx.DrawString("Квиток", headerFont, XBrushes.Black,
                     new XRect(0, 20, page.Width, 50),
                     XStringFormats.Center);
-
-                addTableRow(PdfTicketModel.TranslationMap[nameof(ticket.MovieTitle)], ticket.MovieTitle);
-                addTableRow(PdfTicketModel.TranslationMap[nameof(ticket.SeatNumber)], ticket.SeatNumber.ToString());
-                addTableRow(PdfTicketModel.TranslationMap[nameof(ticket.Price)], ticket.Price.ToString());
-                addTableRow(PdfTicketModel.TranslationMap[nameof(ticket.HallName)], ticket.HallName.ToString());
-                addTableRow(PdfTicketModel.TranslationMap[nameof(ticket.StartTime)], ticket.StartTime.ToString());
-
-                addQrCode($"Ticket id = {ticket.Id}\nSession id = {ticket.SessionId}");
-
-                addDateTimeSign();
-
-                document.Save(ms, false);
-                var bytes = ms.ToArray();
-                return new MemoryStream(bytes);
-            }
         }
-        private void addTableRow(string name, string value)
+        public void addTableRow(string name, string value)
         {
             var nameFont = new XFont("Constantia", 20, XFontStyleEx.Regular);
             var valueFont = new XFont("Arial", 12, XFontStyleEx.Regular);
@@ -69,7 +48,7 @@ namespace moviesAPI.FileTransform
             currentRect = rectangleUnderThis(currentRect);
             isRowOdd = !isRowOdd;
         }
-        private void drawCells(XGraphics gfx, Cell leftCell, Cell rightCell)
+        public void drawCells(XGraphics gfx, Cell leftCell, Cell rightCell)
         {
             gfx.DrawRectangle(leftCell.Color, leftCell.Rectangle);
             gfx.DrawRectangle(rightCell.Color, rightCell.Rectangle);
@@ -78,17 +57,16 @@ namespace moviesAPI.FileTransform
             gfx.DrawString(leftCell.Value, leftCell.Font, XBrushes.Black, leftCell.Rectangle, XStringFormats.Center);
             gfx.DrawString(rightCell.Value, rightCell.Font, XBrushes.Black, rightCell.Rectangle, XStringFormats.Center);
         }
-        private XRect rectangleOnRightSide(XRect leftRect)
+        public XRect rectangleOnRightSide(XRect leftRect)
         {
             return new XRect(leftRect.Right, leftRect.Y, leftRect.Width, leftRect.Height);
         }
-        private XRect rectangleUnderThis(XRect topRect)
+        public XRect rectangleUnderThis(XRect topRect)
         {
             return new XRect(topRect.X, topRect.Bottom, topRect.Width, topRect.Height);
         }
-        private void addQrCode(string info) 
+        public void addQrCode(string info) 
         {
-            const string QRCODE_FILE_PATH = "Material\\qrCodeExample.png";
             double imageX = 100;
             double imageY = 320;
             double imageWidth = 150;
@@ -97,7 +75,7 @@ namespace moviesAPI.FileTransform
             XImage image = QRGenerator.getQRCode(info);
             gfx.DrawImage(image, imageX, imageY, imageWidth, imageHeight);
         }
-        private void addDateTimeSign()
+        public void addDateTimeSign()
         {
             double imageX = 300;
             double imageY = 401;

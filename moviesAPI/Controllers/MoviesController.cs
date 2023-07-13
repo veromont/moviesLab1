@@ -33,7 +33,10 @@ namespace moviesAPI.Controllers
         [HttpGet("get-by-id")]
         public async Task<ActionResult<Movie>> GetMovie(string id)
         {
-            var entity = await _repository.GetById<Movie>(Guid.Parse(id));
+            if (!Guid.TryParse(id, out var uuid))
+                return BadRequest("Некоректний формат id");
+
+            var entity = await _repository.GetById<Movie>(uuid);
             if (entity == null)
             {
                 return BadRequest();
@@ -45,12 +48,14 @@ namespace moviesAPI.Controllers
         [HttpPut("update")]
         public async Task<ActionResult> UpdateMovie(string id, Movie movie)
         {
-            var uuid = Guid.Parse(id); // TODO: uuid parsing global method
-            if (uuid != movie.Id)
-                return BadRequest();
+            if (!Guid.TryParse(id, out var uuid))
+                return BadRequest("Некоректний формат id");
 
-            if (!await movieExists(movie.Id.ToString()))
+            if (!await movieExists(movie.Id))
                 return BadRequest($"Фільм з id {movie.Id} не існує");
+
+            if (!await movieExists(uuid) && uuid != movie.Id)
+                return BadRequest($"Фільм з id {uuid} існує");
 
             var validationResult = await _validator.isMovieInvalid(movie);
             if (validationResult != string.Empty)
@@ -70,10 +75,13 @@ namespace moviesAPI.Controllers
         [HttpDelete("delete-by-id")]
         public async Task<ActionResult> DeleteMovie(string id)
         {
-            if (!await movieExists(id))
-                return BadRequest($"Фільм з id {id} не існує");
+            if (!Guid.TryParse(id, out var uuid))
+                return BadRequest("Некоректний формат id");
 
-            var deletedSuccessfully = await _repository.Delete<Movie>(Guid.Parse(id));
+            if (!await movieExists(uuid))
+                return BadRequest($"Фільм з id {uuid} не існує");
+
+            var deletedSuccessfully = await _repository.Delete<Movie>(uuid);
 
             if (deletedSuccessfully)
             {
@@ -90,7 +98,7 @@ namespace moviesAPI.Controllers
         [HttpPost("insert")]
         public async Task<ActionResult> InsertMovie(Movie movie)
         {
-            if (await movieExists(movie.Id.ToString()))
+            if (await movieExists(movie.Id))
                 return BadRequest($"Фільм з id {movie.Id} уже існує");
 
             var validationResult = await _validator.isMovieInvalid(movie);
@@ -136,9 +144,9 @@ namespace moviesAPI.Controllers
                          select m;
             return result.ToArray();
         }
-        private Task<bool> movieExists(string id)
+        private Task<bool> movieExists(Guid id)
         {
-            return _repository.EntityExists<Movie>(Guid.Parse(id));
+            return _repository.EntityExists<Movie>(id);
         }
     }
 }

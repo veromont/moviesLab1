@@ -1,9 +1,10 @@
 ﻿using moviesAPI.Models;
 using Microsoft.AspNetCore.Mvc;
-using moviesAPI.FileTransform;
+
 using moviesAPI.Models.db;
 using moviesAPI.Repositories;
 using moviesAPI.Validators;
+using moviesAPI.Interfaces;
 
 namespace moviesAPI.Controllers
 {
@@ -13,8 +14,8 @@ namespace moviesAPI.Controllers
     {
         private readonly GenericCinemaRepository _repository;
         private readonly EntityValidator _validator;
-        private readonly PdfTransform _pdfTransformer;
-        public TicketsController(GenericCinemaRepository repository, EntityValidator validator, PdfTransform pdfTransformer)
+        private readonly IPdfTransformService _pdfTransformer;
+        public TicketsController(GenericCinemaRepository repository, EntityValidator validator, IPdfTransformService pdfTransformer)
         {
             _repository = repository;
             _validator = validator;
@@ -34,11 +35,13 @@ namespace moviesAPI.Controllers
         [HttpPut("update")]
         public async Task<ActionResult> UpdateTickets(string id, Session ticket)
         {
-            var uuid = Guid.Parse(id);
+            if (!Guid.TryParse(id, out var uuid))
+                return BadRequest("Некоректний формат id");
+
             if (uuid != ticket.Id)
                 return BadRequest();
 
-            if (!await ticketExists(ticket.Id.ToString()))
+            if (!await ticketExists(ticket.Id))
                 return BadRequest($"Квитка з id {ticket.Id} не існує");
 
             var validationResult = await _validator.isSessionInvalid(ticket);
@@ -59,7 +62,7 @@ namespace moviesAPI.Controllers
         [HttpPost("insert")]
         public async Task<ActionResult> InsertTicket(Ticket ticket)
         {
-            if (await ticketExists(ticket.Id.ToString()))
+            if (await ticketExists(ticket.Id))
                 return BadRequest($"Квиток з id {ticket.Id} уже існує");
 
             var validationResult = await _validator.isTicketInvalid(ticket);
@@ -78,10 +81,13 @@ namespace moviesAPI.Controllers
         [HttpDelete("delete-by-id")]
         public async Task<ActionResult> DeleteTicket(string id)
         {
-            if (!await ticketExists(id))
-                return BadRequest($"Квитка з id {id} не існує");
+            if (!Guid.TryParse(id, out var uuid))
+                return BadRequest("Некоректний формат id");
 
-            var deletedSuccessfully = await _repository.Delete<Ticket>(Guid.Parse(id));
+            if (!await ticketExists(uuid))
+                return BadRequest($"Квитка з id {uuid} не існує");
+
+            var deletedSuccessfully = await _repository.Delete<Ticket>(uuid);
 
             if (deletedSuccessfully)
             {
@@ -98,7 +104,9 @@ namespace moviesAPI.Controllers
         [HttpPost("get-pdf")]
         public async Task<ActionResult<FileStream>> GetTicketAsPDF(string ticketId)
         {
-            var uuid = Guid.Parse(ticketId);
+            if (!Guid.TryParse(ticketId, out var uuid))
+                return BadRequest("Некоректний формат id");
+
             var fileName = "ticket.pdf";
             var contentType = "application/pdf";
 
@@ -125,14 +133,14 @@ namespace moviesAPI.Controllers
             {
                 return BadRequest();
             }
-            var ticketInfo = new PdfTicketModel(ticket, movie.Title, session.StartTime.ToString(), session.EndTime.ToString(), hall.Name);
+            var ticketInfo = new PdfTicketModel(ticket, movie.Title, hall.Name);
             var memoryStream = _pdfTransformer.TransformTicketToPdf(ticketInfo);
             return File(memoryStream, contentType, fileName);
         }
 
-        private Task<bool> ticketExists(string id)
+        private Task<bool> ticketExists(Guid id)
         {
-            return _repository.EntityExists<Movie>(Guid.Parse(id));
+            return _repository.EntityExists<Ticket>(id);
         }
     }
 }

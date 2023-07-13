@@ -67,7 +67,7 @@ namespace moviesAPI.Controllers
         [HttpPost("insert")]
         public async Task<ActionResult> PostHall(Hall hall)
         {
-            if (await hallExists(id))
+            if (await hallExists(hall.Id))
                 return BadRequest($"Зал з id {hall.Id} уже існує");
 
             var validationResult = _validator.isHallInvalid(hall);
