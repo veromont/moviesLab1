@@ -1,5 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using moviesAPI.Models.db;
+using moviesAPI.Models.EntityModels;
 
 namespace moviesAPI.Models.CinemaContext;
 
