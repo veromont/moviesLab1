@@ -1,98 +1,85 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using moviesAPI.Models.CinemaContext;
 using moviesAPI.Models.EntityModels;
+using moviesAPI.Repositories;
+using moviesAPI.Validators;
 
 namespace moviesAPI.Controllers
 {
     public class MoviesController : Controller
     {
-        private readonly CinemaContext _context;
-
-        public MoviesController(CinemaContext context)
+        private readonly GenericCinemaRepository _repository;
+        private readonly EntityValidator _validator;
+        public MoviesController(GenericCinemaRepository repository, EntityValidator validator)
         {
-            _context = context;
+            _repository = repository;
+            _validator = validator;
         }
 
-        // GET: Movies
         public async Task<IActionResult> Index()
         {
-            var cinemaContext = _context.Movies.Include(m => m.Genre);
-            return View(await cinemaContext.ToListAsync());
-        }
+            var entities = await _repository.GetAll<Movie>();
 
-        // GET: Movies/Details/5
-        public async Task<IActionResult> Details(Guid? id)
+            return entities != null ?
+                          View(entities) :
+                          Problem("Нічого не знайдено");
+        }
+        public async Task<IActionResult> Details(Guid id)
         {
-            if (id == null || _context.Movies == null)
+            var entity = await _repository.GetById<Movie>(id);
+            if (entity == null)
             {
                 return NotFound();
             }
 
-            var movie = await _context.Movies
-                .Include(m => m.Genre)
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (movie == null)
-            {
-                return NotFound();
-            }
-
-            return View(movie);
+            return View(entity);
         }
 
-        // GET: Movies/Create
         public IActionResult Create()
         {
-            ViewData["GenreId"] = new SelectList(_context.Genres, "Id", "Id");
             return View();
         }
 
-        // POST: Movies/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Title,Director,ReleaseDate,Rating,Duration,GenreId")] Movie movie)
+        public async Task<IActionResult> Create([Bind("Id,Name,Capacity,IsAvailable")] Movie movie)
         {
-            if (ModelState.IsValid)
+            var validationResult = await _validator.isMovieInvalid(movie);
+
+            if (validationResult.Count > 0)
             {
-                movie.Id = Guid.NewGuid();
-                _context.Add(movie);
-                await _context.SaveChangesAsync();
+                foreach (var errorMessage in validationResult)
+                {
+                    ModelState.AddModelError(errorMessage.Key, errorMessage.Value);
+                }
+            }
+            else
+            {
+                await _repository.Insert(movie);
+                await _repository.Save();
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["GenreId"] = new SelectList(_context.Genres, "Id", "Id", movie.GenreId);
             return View(movie);
         }
-
-        // GET: Movies/Edit/5
-        public async Task<IActionResult> Edit(Guid? id)
+        public async Task<IActionResult> Edit(Guid id)
         {
-            if (id == null || _context.Movies == null)
+            if (id == null)
             {
                 return NotFound();
             }
 
-            var movie = await _context.Movies.FindAsync(id);
+            var movie = await _repository.GetById<Movie>(id);
             if (movie == null)
             {
                 return NotFound();
             }
-            ViewData["GenreId"] = new SelectList(_context.Genres, "Id", "Id", movie.GenreId);
             return View(movie);
         }
 
-        // POST: Movies/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Guid id, [Bind("Id,Title,Director,ReleaseDate,Rating,Duration,GenreId")] Movie movie)
+        public async Task<IActionResult> Edit(Guid id, Movie movie)
         {
             if (id != movie.Id)
             {
@@ -103,37 +90,32 @@ namespace moviesAPI.Controllers
             {
                 try
                 {
-                    _context.Update(movie);
-                    await _context.SaveChangesAsync();
+                    await _repository.Update(id, movie);
+                    await _repository.Save();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!MovieExists(movie.Id))
+                    if (!await movieExists(movie.Id))
                     {
                         return NotFound();
                     }
                     else
                     {
-                        throw;
+                        return BadRequest();
                     }
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["GenreId"] = new SelectList(_context.Genres, "Id", "Id", movie.GenreId);
             return View(movie);
         }
-
-        // GET: Movies/Delete/5
-        public async Task<IActionResult> Delete(Guid? id)
+        public async Task<IActionResult> Delete(Guid id)
         {
-            if (id == null || _context.Movies == null)
+            if (id == null)
             {
                 return NotFound();
             }
 
-            var movie = await _context.Movies
-                .Include(m => m.Genre)
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var movie = await _repository.GetById<Movie>(id);
             if (movie == null)
             {
                 return NotFound();
@@ -141,29 +123,17 @@ namespace moviesAPI.Controllers
 
             return View(movie);
         }
-
-        // POST: Movies/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(Guid id)
         {
-            if (_context.Movies == null)
-            {
-                return Problem("Entity set 'CinemaContext.Movies'  is null.");
-            }
-            var movie = await _context.Movies.FindAsync(id);
-            if (movie != null)
-            {
-                _context.Movies.Remove(movie);
-            }
-            
-            await _context.SaveChangesAsync();
+            await _repository.Delete<Movie>(id);
+            await _repository.Save();
             return RedirectToAction(nameof(Index));
         }
-
-        private bool MovieExists(Guid id)
+        private Task<bool> movieExists(Guid id)
         {
-          return (_context.Movies?.Any(e => e.Id == id)).GetValueOrDefault();
+            return _repository.EntityExists<Movie>(id);
         }
     }
 }

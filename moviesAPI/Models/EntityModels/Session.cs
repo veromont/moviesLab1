@@ -2,7 +2,7 @@
 
 namespace moviesAPI.Models.EntityModels;
 
-public partial class Session : Entity
+public partial class Session
 {
     public Guid Id { get; set; }
     public Guid MovieId { get; set; }
@@ -20,13 +20,4 @@ public partial class Session : Entity
     [JsonIgnore]
     public virtual ICollection<Ticket>? SessionTickets { get; set; } = new List<Ticket>();
 
-	[JsonIgnore]
-	public static Dictionary<string, string> TranslationMap { get; } = new Dictionary<string, string>{
-		{ nameof(Id), "ID-unicode" },
-		{ nameof(MovieId), "Фільм id" },
-		{ nameof(HallId), "Зал id" },
-		{ nameof(StartTime), "Початок" },
-		{ nameof(EndTime), "Кінець" },
-		{ nameof(Price), "Ціна" },
-	};
 }

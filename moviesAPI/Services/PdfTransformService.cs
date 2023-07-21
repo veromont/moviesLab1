@@ -26,11 +26,11 @@ namespace moviesAPI.Services
 
                 builder.addHeader(headerFont);
 
-                builder.addTableRow(PdfTicketModel.TranslationMap[nameof(ticket.MovieTitle)], ticket.MovieTitle);
-                builder.addTableRow(PdfTicketModel.TranslationMap[nameof(ticket.SeatNumber)], ticket.SeatNumber.ToString());
-                builder.addTableRow(PdfTicketModel.TranslationMap[nameof(ticket.Price)], ticket.Price.ToString());
-                builder.addTableRow(PdfTicketModel.TranslationMap[nameof(ticket.HallName)], ticket.HallName.ToString());
-                builder.addTableRow(PdfTicketModel.TranslationMap[nameof(ticket.StartTime)], ticket.StartTime.ToString());
+                builder.addTableRow(Translation.EntitiesDataTranslationMap[nameof(ticket.MovieTitle)], ticket.MovieTitle);
+                builder.addTableRow(Translation.EntitiesDataTranslationMap[nameof(ticket.SeatNumber)], ticket.SeatNumber.ToString());
+                builder.addTableRow(Translation.EntitiesDataTranslationMap[nameof(ticket.Price)], ticket.Price.ToString());
+                builder.addTableRow(Translation.EntitiesDataTranslationMap[nameof(ticket.HallName)], ticket.HallName.ToString());
+                builder.addTableRow(Translation.EntitiesDataTranslationMap[nameof(ticket.StartTime)], ticket.StartTime.ToString());
 
                 builder.addQrCode($"Ticket id = {ticket.Id}\nSession id = {ticket.SessionId}");
 

@@ -19,7 +19,6 @@ public partial class CinemaContext : DbContext
     public virtual DbSet<Session> Sessions { get; set; }
     public virtual DbSet<Ticket> Tickets { get; set; }
     public virtual DbSet<Genre> Genres { get; set; }
-    public virtual DbSet<Client> Clients { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -53,16 +52,7 @@ public partial class CinemaContext : DbContext
             entity.ToTable("tickets");
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.SessionId).HasColumnName("sessionId");
-            entity.Property(e => e.ClientId).HasColumnName("clientId");
             entity.Property(e => e.SeatNumber).HasColumnName("seatNumber");
-        });
-        modelBuilder.Entity<Client>(entity =>
-        {
-            entity.ToTable("clients");
-            entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.Name).HasColumnName("name");
-            entity.Property(e => e.Email).HasColumnName("email");
-            entity.Property(e => e.Password).HasColumnName("password");
         });
         modelBuilder.Entity<Session>(entity =>
         {

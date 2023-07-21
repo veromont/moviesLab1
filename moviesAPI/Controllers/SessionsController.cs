@@ -1,102 +1,85 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using moviesAPI.Models.CinemaContext;
 using moviesAPI.Models.EntityModels;
+using moviesAPI.Repositories;
+using moviesAPI.Validators;
 
 namespace moviesAPI.Controllers
 {
     public class SessionsController : Controller
     {
-        private readonly CinemaContext _context;
-
-        public SessionsController(CinemaContext context)
+        private readonly GenericCinemaRepository _repository;
+        private readonly EntityValidator _validator;
+        public SessionsController(GenericCinemaRepository repository, EntityValidator validator)
         {
-            _context = context;
+            _repository = repository;
+            _validator = validator;
         }
 
-        // GET: Sessions
         public async Task<IActionResult> Index()
         {
-            var cinemaContext = _context.Sessions.Include(s => s.Hall).Include(s => s.Movie);
-            return View(await cinemaContext.ToListAsync());
-        }
+            var entities = await _repository.GetAll<Session>();
 
-        // GET: Sessions/Details/5
-        public async Task<IActionResult> Details(Guid? id)
+            return entities != null ?
+                          View(entities) :
+                          Problem("Нічого не знайдено");
+        }
+        public async Task<IActionResult> Details(Guid id)
         {
-            if (id == null || _context.Sessions == null)
+            var entity = await _repository.GetById<Session>(id);
+            if (entity == null)
             {
                 return NotFound();
             }
 
-            var session = await _context.Sessions
-                .Include(s => s.Hall)
-                .Include(s => s.Movie)
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (session == null)
-            {
-                return NotFound();
-            }
-
-            return View(session);
+            return View(entity);
         }
 
-        // GET: Sessions/Create
         public IActionResult Create()
         {
-            ViewData["HallId"] = new SelectList(_context.Halls, "Id", "Id");
-            ViewData["MovieId"] = new SelectList(_context.Movies, "Id", "Id");
             return View();
         }
 
-        // POST: Sessions/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,MovieId,HallId,StartTime,EndTime,Price")] Session session)
+        public async Task<IActionResult> Create(Session session)
         {
-            if (ModelState.IsValid)
+            var validationResult = await _validator.isSessionInvalid(session);
+
+            if (validationResult.Count > 0)
             {
-                session.Id = Guid.NewGuid();
-                _context.Add(session);
-                await _context.SaveChangesAsync();
+                foreach (var errorMessage in validationResult)
+                {
+                    ModelState.AddModelError(errorMessage.Key, errorMessage.Value);
+                }
+            }
+            else
+            {
+                await _repository.Insert(session);
+                await _repository.Save();
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["HallId"] = new SelectList(_context.Halls, "Id", "Id", session.HallId);
-            ViewData["MovieId"] = new SelectList(_context.Movies, "Id", "Id", session.MovieId);
             return View(session);
         }
-
-        // GET: Sessions/Edit/5
-        public async Task<IActionResult> Edit(Guid? id)
+        public async Task<IActionResult> Edit(Guid id)
         {
-            if (id == null || _context.Sessions == null)
+            if (id == null)
             {
                 return NotFound();
             }
 
-            var session = await _context.Sessions.FindAsync(id);
+            var session = await _repository.GetById<Session>(id);
             if (session == null)
             {
                 return NotFound();
             }
-            ViewData["HallId"] = new SelectList(_context.Halls, "Id", "Id", session.HallId);
-            ViewData["MovieId"] = new SelectList(_context.Movies, "Id", "Id", session.MovieId);
             return View(session);
         }
 
-        // POST: Sessions/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Guid id, [Bind("Id,MovieId,HallId,StartTime,EndTime,Price")] Session session)
+        public async Task<IActionResult> Edit(Guid id, Session session)
         {
             if (id != session.Id)
             {
@@ -107,39 +90,32 @@ namespace moviesAPI.Controllers
             {
                 try
                 {
-                    _context.Update(session);
-                    await _context.SaveChangesAsync();
+                    await _repository.Update(id, session);
+                    await _repository.Save();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!SessionExists(session.Id))
+                    if (!await sessionExists(session.Id))
                     {
                         return NotFound();
                     }
                     else
                     {
-                        throw;
+                        return BadRequest();
                     }
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["HallId"] = new SelectList(_context.Halls, "Id", "Id", session.HallId);
-            ViewData["MovieId"] = new SelectList(_context.Movies, "Id", "Id", session.MovieId);
             return View(session);
         }
-
-        // GET: Sessions/Delete/5
-        public async Task<IActionResult> Delete(Guid? id)
+        public async Task<IActionResult> Delete(Guid id)
         {
-            if (id == null || _context.Sessions == null)
+            if (id == null)
             {
                 return NotFound();
             }
 
-            var session = await _context.Sessions
-                .Include(s => s.Hall)
-                .Include(s => s.Movie)
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var session = await _repository.GetById<Session>(id);
             if (session == null)
             {
                 return NotFound();
@@ -147,29 +123,17 @@ namespace moviesAPI.Controllers
 
             return View(session);
         }
-
-        // POST: Sessions/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(Guid id)
         {
-            if (_context.Sessions == null)
-            {
-                return Problem("Entity set 'CinemaContext.Sessions'  is null.");
-            }
-            var session = await _context.Sessions.FindAsync(id);
-            if (session != null)
-            {
-                _context.Sessions.Remove(session);
-            }
-            
-            await _context.SaveChangesAsync();
+            await _repository.Delete<Session>(id);
+            await _repository.Save();
             return RedirectToAction(nameof(Index));
         }
-
-        private bool SessionExists(Guid id)
+        private Task<bool> sessionExists(Guid id)
         {
-          return (_context.Sessions?.Any(e => e.Id == id)).GetValueOrDefault();
+            return _repository.EntityExists<Session>(id);
         }
     }
 }

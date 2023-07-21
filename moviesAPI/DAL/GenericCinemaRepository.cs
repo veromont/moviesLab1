@@ -16,24 +16,24 @@ namespace moviesAPI.Repositories
             this.context = context;
         }
 
-        public async Task<IEnumerable<TEntity>> GetAll<TEntity>() where TEntity : Entity
+        public async Task<IEnumerable<TEntity>> GetAll<TEntity>() where TEntity : class
         {
             return await context.Set<TEntity>().ToListAsync();
         }
-        public async Task<TEntity?> GetById<TEntity>(Guid id) where TEntity : Entity
+        public async Task<TEntity?> GetById<TEntity>(Guid id) where TEntity : class
         {
             return await context.Set<TEntity>().FindAsync(id);
         }
-        public async Task<TEntity?> GetById<TEntity>(int id) where TEntity : Entity
+        public async Task<TEntity?> GetById<TEntity>(int id) where TEntity : class
         {
             return await context.Set<TEntity>().FindAsync(id);
         }
-        public async Task<bool> Insert<TEntity>(TEntity entity) where TEntity : Entity
+        public async Task<bool> Insert<TEntity>(TEntity entity) where TEntity : class
         {
             await context.Set<TEntity>().AddAsync(entity);
             return true;
         }
-        public async Task<bool> Update<TEntity>(Guid id, TEntity entity) where TEntity : Entity
+        public async Task<bool> Update<TEntity>(Guid id, TEntity entity) where TEntity : class
         {
             var modifiedEntity = await context.Set<TEntity>().FindAsync(id);
             if (modifiedEntity == null)
@@ -43,7 +43,7 @@ namespace moviesAPI.Repositories
             context.Entry(entity).State = EntityState.Modified;
             return true;
         }
-        public async Task<bool> Update<TEntity>(int id, TEntity entity) where TEntity : Entity
+        public async Task<bool> Update<TEntity>(int id, TEntity entity) where TEntity : class
         {
             var modifiedEntity = await context.Set<TEntity>().FindAsync(id);
             if (modifiedEntity == null)
@@ -53,7 +53,7 @@ namespace moviesAPI.Repositories
             context.Entry(entity).State = EntityState.Modified;
             return true;
         }
-        public async Task<bool> Delete<TEntity>(Guid id) where TEntity : Entity
+        public async Task<bool> Delete<TEntity>(Guid id) where TEntity : class
         {
             var entity = await context.Set<TEntity>().FindAsync(id);
             if (entity == null)
@@ -62,7 +62,7 @@ namespace moviesAPI.Repositories
             context.Set<TEntity>().Remove(entity);
             return true;
         }
-        public async Task<bool> Delete<TEntity>(int id) where TEntity : Entity
+        public async Task<bool> Delete<TEntity>(int id) where TEntity : class
         {
             var entity = await context.Set<TEntity>().FindAsync(id);
             if (entity == null)
@@ -71,11 +71,11 @@ namespace moviesAPI.Repositories
             context.Set<TEntity>().Remove(entity);
             return true;
         }
-        public async Task<bool> EntityExists<TEntity>(Guid id) where TEntity : Entity
+        public async Task<bool> EntityExists<TEntity>(Guid id) where TEntity : class
         {
             return await context.Set<TEntity>().FindAsync(id) != null;
         }
-        public async Task<bool> EntityExists<TEntity>(int id) where TEntity : Entity
+        public async Task<bool> EntityExists<TEntity>(int id) where TEntity : class
         {
             return await context.Set<TEntity>().FindAsync(id) != null;
         }

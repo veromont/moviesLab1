@@ -2,7 +2,7 @@
 
 namespace moviesAPI.Models.EntityModels;
 
-public partial class Hall : Entity
+public partial class Hall
 {
     public int Id { get; set; }
     public string Name { get; set; } = null!;
@@ -12,11 +12,4 @@ public partial class Hall : Entity
     [JsonIgnore]
     public virtual ICollection<Session>? Sessions { get; set; } = new List<Session>();
 
-	[JsonIgnore]
-	public static Dictionary<string, string> TranslationMap { get; } = new Dictionary<string, string>{
-		{ nameof(Id), "ID-unicode" },
-			{ nameof(Capacity), "Місткість" },
-			{ nameof(Name), "Ім'я" },
-			{ nameof(IsAvailable), "Доступність" },
-		};
 }

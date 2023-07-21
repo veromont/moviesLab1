@@ -2,7 +2,7 @@
 
 namespace moviesAPI.Models.EntityModels;
 
-public partial class Movie : Entity
+public partial class Movie
 {
     public Guid Id { get; set; }
     public string Title { get; set; } = null!;
@@ -18,14 +18,4 @@ public partial class Movie : Entity
     [JsonIgnore]
     public Genre? Genre { get; set; }
 
-	[JsonIgnore]
-	public static Dictionary<string, string> TranslationMap { get; } = new Dictionary<string, string>{
-		{ nameof(Id), "ID-unicode" },
-		{ nameof(Title), "Місткість" },
-		{ nameof(Director), "Ім'я" },
-		{ nameof(ReleaseDate), "Дата виходу" },
-		{ nameof(Rating), "Оцінка" },
-		{ nameof(Duration), "Тривалість" },
-		{ nameof(GenreId), "Жанр id" },
-	};
 }
