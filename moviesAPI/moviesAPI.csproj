@@ -8,14 +8,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="fonts\arial\arial.ttf" />
-    <None Remove="fonts\arial\arialbd.ttf" />
-    <None Remove="fonts\arial\arialbi.ttf" />
-    <None Remove="fonts\arial\ariali.ttf" />
-    <None Remove="fonts\constantia\constan.ttf" />
-    <None Remove="fonts\constantia\constanb.ttf" />
-    <None Remove="fonts\constantia\constani.ttf" />
-    <None Remove="fonts\constantia\constanz.ttf" />
+    <None Remove="Material\fonts\arial\arial.ttf" />
+    <None Remove="Material\fonts\arial\arialbd.ttf" />
+    <None Remove="Material\fonts\arial\arialbi.ttf" />
+    <None Remove="Material\fonts\arial\ariali.ttf" />
+    <None Remove="Material\fonts\constantia\constan.ttf" />
+    <None Remove="Material\fonts\constantia\constanb.ttf" />
+    <None Remove="Material\fonts\constantia\constani.ttf" />
+    <None Remove="Material\fonts\constantia\constanz.ttf" />
   </ItemGroup>
 
   <ItemGroup>
@@ -39,18 +39,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="fonts\arial\arial.ttf" />
-    <EmbeddedResource Include="fonts\arial\arialbd.ttf" />
-    <EmbeddedResource Include="fonts\arial\arialbi.ttf" />
-    <EmbeddedResource Include="fonts\arial\ariali.ttf" />
-    <EmbeddedResource Include="fonts\constantia\constan.ttf" />
-    <EmbeddedResource Include="fonts\constantia\constanb.ttf" />
-    <EmbeddedResource Include="fonts\constantia\constani.ttf" />
-    <EmbeddedResource Include="fonts\constantia\constanz.ttf" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Material\" />
+    <EmbeddedResource Include="Material\fonts\arial\arial.ttf" />
+    <EmbeddedResource Include="Material\fonts\arial\arialbd.ttf" />
+    <EmbeddedResource Include="Material\fonts\arial\arialbi.ttf" />
+    <EmbeddedResource Include="Material\fonts\arial\ariali.ttf" />
+    <EmbeddedResource Include="Material\fonts\constantia\constan.ttf" />
+    <EmbeddedResource Include="Material\fonts\constantia\constanb.ttf" />
+    <EmbeddedResource Include="Material\fonts\constantia\constani.ttf" />
+    <EmbeddedResource Include="Material\fonts\constantia\constanz.ttf" />
   </ItemGroup>
 
   <ItemGroup>

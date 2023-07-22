@@ -5,8 +5,9 @@ using moviesAPI.Interfaces;
 using moviesAPI.Services;
 using moviesAPI.Validators;
 using moviesAPI.Areas.Identity.Data;
-using NuGet.Configuration;
 using Microsoft.AspNetCore.Localization;
+using Microsoft.AspNetCore.Identity.UI.Services;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,9 +30,12 @@ builder.Services.AddDefaultIdentity<User>(options =>
     options.Password.RequiredLength = 4;
 }).AddEntityFrameworkStores<IdentityContext>();
 
+builder.Services.AddTransient<IEmailSender, EmailSender>();
 builder.Services.AddScoped<GenericCinemaRepository>();
-builder.Services.AddScoped<IPdfTransformService, PdfTransformService>();
+builder.Services.AddScoped<IPdfTransformService, PdfTransform>();
 builder.Services.AddTransient<EntityValidator>();
+
+builder.Services.Configure<AuthMessageSenderOptions>(builder.Configuration);
 
 builder.Services.AddControllersWithViews();
 

@@ -6,11 +6,11 @@ using PdfSharp.Pdf;
 
 namespace moviesAPI.Services
 {
-    public class PdfTransformService : IPdfTransformService
+    public class PdfTransform : IPdfTransformService
     {
         PdfBuilder builder;
         PdfDocument document;
-        public PdfTransformService()
+        public PdfTransform()
         {
             document = new PdfDocument();
             builder = new PdfBuilder(document);

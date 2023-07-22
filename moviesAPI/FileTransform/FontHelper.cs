@@ -1,6 +1,6 @@
 ﻿using System.Reflection;
 
-namespace moviesAPI.fonts
+namespace moviesAPI.FileTransform
 {
     /// <summary>
     /// Helper class that reads font data from embedded resources.
@@ -54,7 +54,7 @@ namespace moviesAPI.fonts
 
             // Test code to find the names of embedded fonts
             //var ourResources = assembly.GetManifestResourceNames();
-            const string GLOBALPATH = "moviesAPI.fonts.";
+            const string GLOBALPATH = "moviesAPI.Material.fonts.";
 
             using (Stream stream = assembly.GetManifestResourceStream(GLOBALPATH + name))
             {
