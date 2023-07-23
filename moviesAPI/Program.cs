@@ -7,7 +7,7 @@ using moviesAPI.Validators;
 using moviesAPI.Areas.Identity.Data;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Identity.UI.Services;
-
+using Microsoft.AspNetCore.Identity;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -30,7 +30,7 @@ builder.Services.AddDefaultIdentity<User>(options =>
     options.Password.RequiredLength = 4;
 }).AddEntityFrameworkStores<IdentityContext>();
 
-builder.Services.AddTransient<IEmailSender, EmailSender>();
+builder.Services.AddTransient<IEmailSender, EmailSenderService>();
 builder.Services.AddScoped<GenericCinemaRepository>();
 builder.Services.AddScoped<IPdfTransformService, PdfTransform>();
 builder.Services.AddTransient<EntityValidator>();
@@ -66,6 +66,5 @@ app.UseAuthorization();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
-app.MapRazorPages();
 
 app.Run();

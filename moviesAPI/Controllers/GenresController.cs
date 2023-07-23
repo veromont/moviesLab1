@@ -42,7 +42,7 @@ namespace moviesAPI.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Name,Capacity,IsAvailable")] Genre genre)
+        public async Task<IActionResult> Create(Genre genre)
         {
             var validationResult = _validator.isGenreInvalid(genre);
 
@@ -78,7 +78,7 @@ namespace moviesAPI.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Capacity,IsAvailable")] Genre genre)
+        public async Task<IActionResult> Edit(int id, Genre genre)
         {
             if (id != genre.Id)
             {

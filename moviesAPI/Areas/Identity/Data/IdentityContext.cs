@@ -9,6 +9,7 @@ public class IdentityContext : IdentityDbContext<User>
     public IdentityContext(DbContextOptions<IdentityContext> options)
         : base(options)
     {
+        Database.EnsureCreated();
     }
 
     protected override void OnModelCreating(ModelBuilder builder)
