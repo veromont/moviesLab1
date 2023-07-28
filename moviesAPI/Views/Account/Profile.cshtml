@@ -1,14 +1,34 @@
 ﻿@model moviesAPI.Models.ViewModels.ProfileModel
+<script type="text/javascript">
+    const onImageClick = () => {
+        document.getElementById("imageChoose").click();
+    }
+    const onImageChange = () => {
+        document.getElementById("imageSubmit").click();
+    }
+</script>
+<h3>@Model.Username</h3>
 
-<h3>Profile</h3>
 <div class="row">
     <div class="col-md-6">
-        <form id="profile-form" method="post">
+        <form asp-controller="Account" asp-action="UploadImage" method="post" enctype="multipart/form-data">
+            <input type="file" id="imageChoose" name="imageFile" accept="image/*" onchange="@Html.Raw("onImageChange")">
+            <input type="submit" id="imageSubmit" value="Upload Image">
+        </form>
+        @if (Model.Input.Image != null)
+        {
+            <img src="data:image/png;base64,@Convert.ToBase64String(Model.Input.Image)"
+                    alt="Image" class="img-fluid rounded-4 mb-2" onclick="@Html.Raw("onImageClick")">
+        }
+        else
+        {
+            <img src="~/no_image_image.jpg"  alt="Default Image" 
+                    class="img-fluid rounded-4 mb-2" onclick="@Html.Raw("onImageClick")">
+        }
+    </div>
+    <form asp-controller="Account" asp-action="Profile" id="profile-form" method="post">
+        <div class="col-md-6">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-floating">
-                <input asp-for="Username" class="form-control" disabled />
-                <label asp-for="Username" class="form-label"></label>
-            </div>
             <div class="form-floating">
                 <input asp-for="Input.Name" class="form-control" />
                 <label asp-for="Input.Name" class="form-label"></label>
@@ -24,8 +44,22 @@
                 <label asp-for="Input.PhoneNumber" class="form-label"></label>
                 <span asp-validation-for="Input.PhoneNumber" class="text-danger"></span>
             </div>
-            <button id="update-profile-button" type="submit" class="w-100 btn btn-lg btn-primary">Save</button>
-        </form>
-    </div>
+            <div class="form-floating">
+                <input asp-for="Input.Bio" class="form-control" />
+                <label asp-for="Input.Bio" class="form-label"></label>
+                <span asp-validation-for="Input.Bio" class="text-danger"></span>
+            </div>
+            <div class="form-floating">
+                <input asp-for="Input.FavouriteMovieId" class="form-control" />
+                <label asp-for="Input.FavouriteMovieId" class="form-label"></label>
+                <span asp-validation-for="Input.FavouriteMovieId" class="text-danger"></span>
+            </div>
+            <div class="form-floating">
+                <input asp-for="Input.Bio" class="form-control" />
+                <label asp-for="Input.Bio" class="form-label"></label>
+                <span asp-validation-for="Input.Bio" class="text-danger"></span>
+            </div>
+        </div>
+        <button id="update-profile-button" type="submit" class="w-100 btn btn-lg btn-primary">Зберегти</button>
+    </form>
 </div>
-

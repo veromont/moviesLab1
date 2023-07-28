@@ -35,36 +35,45 @@ namespace moviesAPI.Controllers
                 return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
             }
 
-            var model = fillUserInfo(user);
+            var model = new ProfileModel(user);
             return View(model);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Profile(ProfileInputModel profileInput)
+        public async Task<ActionResult> UploadImage(IFormFile imageFile)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (imageFile != null && imageFile.Length > 0)
+            {
+                using (var memoryStream = new MemoryStream())
+                {
+                    imageFile.CopyTo(memoryStream);
+                    user.Image = memoryStream.ToArray();
+                }
+            }
+            await _userManager.UpdateAsync(user);
+            var newModel = new ProfileModel(user);
+            return View("Profile", newModel);
+        }
+        [HttpPost]
+        public async Task<IActionResult> Profile(ProfileModel model)
         {
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
             {
                 return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
             }
+            model.UpdateUser(user);
 
+            await _userManager.UpdateAsync(user);
             if (!ModelState.IsValid)
             {
-                var model = fillUserInfo(user);
-                return View(model);
+                var md = new ProfileModel(user);
+                return View(md);
             }
             return View();
         }
-        [NonAction]
-        private ProfileModel fillUserInfo(User user)
-        {
-            var model = new ProfileModel();
-            model.Username = user.UserName;
-            model.Input.PhoneNumber = user.PhoneNumber;
-            model.Input.Name = user.Name;
-            model.Input.Surname = user.Surname;
-            return model;
-        }
+
         [HttpGet]
         public IActionResult Register()
         {

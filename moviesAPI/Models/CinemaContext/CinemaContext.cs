@@ -7,11 +7,13 @@ public partial class CinemaContext : DbContext
 {
     public CinemaContext()
     {
+        Database.EnsureCreated();
     }
 
     public CinemaContext(DbContextOptions<CinemaContext> options)
         : base(options)
     {
+        Database.EnsureCreated();
     }
 
     public virtual DbSet<Hall> Halls { get; set; }
@@ -46,6 +48,11 @@ public partial class CinemaContext : DbContext
             entity.Property(e => e.ReleaseDate).HasColumnName("releaseDate");
             entity.Property(e => e.Rating).HasColumnName("rating");
             entity.Property(e => e.GenreId).HasColumnName("genreId");
+
+            entity.HasOne(m => m.Genre)
+                  .WithMany(g => g.Movies)
+                  .HasForeignKey(m => m.GenreId)
+                  .OnDelete(DeleteBehavior.Restrict);
         });
         modelBuilder.Entity<Ticket>(entity =>
         {
@@ -53,6 +60,11 @@ public partial class CinemaContext : DbContext
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.SessionId).HasColumnName("sessionId");
             entity.Property(e => e.SeatNumber).HasColumnName("seatNumber");
+
+            entity.HasOne(t => t.Session)
+                  .WithMany(s => s.SessionTickets)
+                  .HasForeignKey(s => s.SessionId)
+                  .OnDelete(DeleteBehavior.Cascade);
         });
         modelBuilder.Entity<Session>(entity =>
         {
@@ -63,6 +75,27 @@ public partial class CinemaContext : DbContext
             entity.Property(e => e.EndTime).HasColumnName("endTime");
             entity.Property(e => e.HallId).HasColumnName("hallId");
             entity.Property(e => e.Price).HasColumnName("price");
+
+            entity.HasOne(s => s.Movie)
+                  .WithMany(m => m.Sessions)
+                  .HasForeignKey(s => s.MovieId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(s => s.Hall)
+                  .WithMany(h => h.Sessions)
+                  .HasForeignKey(s => s.HallId)
+                  .OnDelete(DeleteBehavior.Cascade);
+        });
+        modelBuilder.Entity<ClientLikesGenre>(entity =>
+        {
+            entity.ToTable("client_genre");
+            entity.Property(e => e.Username).HasColumnName("username");
+            entity.Property(e => e.GenreId).HasColumnName("genreId");
+
+            entity.HasOne(c => c.Genre)
+                  .WithMany(g => g.Clients)
+                  .HasForeignKey(c => c.GenreId)
+                  .OnDelete(DeleteBehavior.Cascade);
         });
         OnModelCreatingPartial(modelBuilder);
     }

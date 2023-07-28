@@ -10,5 +10,8 @@ namespace moviesAPI.Models.EntityModels
         [JsonIgnore]
         public virtual ICollection<Movie>? Movies { get; set; }
 
-	}
+        [JsonIgnore]
+        public virtual ICollection<ClientLikesGenre>? Clients { get; set; }
+
+    }
 }
