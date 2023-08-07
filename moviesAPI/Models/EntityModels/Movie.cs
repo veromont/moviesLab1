@@ -11,6 +11,7 @@ public partial class Movie
     public double Rating { get; set; }
     public TimeOnly Duration { get; set; }
     public int? GenreId { get; set; }
+    public string? Plot { get; set; }
 
     [JsonIgnore]
     public virtual ICollection<Session>? Sessions { get; set; } = new List<Session>();

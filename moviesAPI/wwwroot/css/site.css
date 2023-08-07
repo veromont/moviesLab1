@@ -16,3 +16,21 @@ html {
 body {
   margin-bottom: 60px;
 }
+
+.form-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+.submit-btn {
+    width: 300px;
+}
+
+.icon-button {
+    background-color: transparent;
+    font-size: 0;
+    cursor: pointer;
+    margin-right: 5px;
+}

@@ -21,6 +21,7 @@ public partial class CinemaContext : DbContext
     public virtual DbSet<Session> Sessions { get; set; }
     public virtual DbSet<Ticket> Tickets { get; set; }
     public virtual DbSet<Genre> Genres { get; set; }
+    public virtual DbSet<UserGenreConnection> ClientGenreConnections { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -48,6 +49,7 @@ public partial class CinemaContext : DbContext
             entity.Property(e => e.ReleaseDate).HasColumnName("releaseDate");
             entity.Property(e => e.Rating).HasColumnName("rating");
             entity.Property(e => e.GenreId).HasColumnName("genreId");
+            entity.Property(e => e.Plot).HasColumnName("plot");
 
             entity.HasOne(m => m.Genre)
                   .WithMany(g => g.Movies)
@@ -86,11 +88,12 @@ public partial class CinemaContext : DbContext
                   .HasForeignKey(s => s.HallId)
                   .OnDelete(DeleteBehavior.Cascade);
         });
-        modelBuilder.Entity<ClientLikesGenre>(entity =>
+        modelBuilder.Entity<UserGenreConnection>(entity =>
         {
             entity.ToTable("client_genre");
+            entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.Username).HasColumnName("username");
-            entity.Property(e => e.GenreId).HasColumnName("genreId");
+            entity.Property(e => e.GenreId).HasColumnName("genre_id");
 
             entity.HasOne(c => c.Genre)
                   .WithMany(g => g.Clients)

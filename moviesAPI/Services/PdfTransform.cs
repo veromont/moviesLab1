@@ -26,11 +26,11 @@ namespace moviesAPI.Services
 
                 builder.addHeader(headerFont);
 
-                builder.addTableRow(Translation.EntitiesDataTranslationMap[nameof(ticket.MovieTitle)], ticket.MovieTitle);
-                builder.addTableRow(Translation.EntitiesDataTranslationMap[nameof(ticket.SeatNumber)], ticket.SeatNumber.ToString());
-                builder.addTableRow(Translation.EntitiesDataTranslationMap[nameof(ticket.Price)], ticket.Price.ToString());
-                builder.addTableRow(Translation.EntitiesDataTranslationMap[nameof(ticket.HallName)], ticket.HallName.ToString());
-                builder.addTableRow(Translation.EntitiesDataTranslationMap[nameof(ticket.StartTime)], ticket.StartTime.ToString());
+                builder.addTableRow("Назва фільму", ticket.MovieTitle);
+                builder.addTableRow("Номер сидіння", ticket.SeatNumber.ToString());
+                builder.addTableRow("Ціна", ticket.Price.ToString());
+                builder.addTableRow("Зал", ticket.HallName.ToString());
+                builder.addTableRow("Початок сеансу", ticket.StartTime.ToString());
 
                 builder.addQrCode($"Ticket id = {ticket.Id}\nSession id = {ticket.SessionId}");
 

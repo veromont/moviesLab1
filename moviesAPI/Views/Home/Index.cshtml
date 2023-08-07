@@ -1,8 +1,49 @@
-﻿@{
+﻿@model moviesAPI.Models.ViewModels.HomeIndexModel;
+@{ 
     ViewData["Title"] = "Home";
 }
 
 <div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+    <h1 class="display-4">Ласкаво просимо!</h1>
+    <h2 style="text-align:left;">Скоро: </h2>
+    <div>
+        @foreach (var movie in Model.Movies)
+        {
+            <div class="card border-primary mb-3" style="max-width: 20rem;">
+                <div class="card-header">Режисер: @movie.Director</div>
+                <div class="card-body">
+                    <h4 class="card-title">@movie.Title</h4>
+                    @if(movie.Plot != null)
+                    {
+                        <p class="card-text">@movie.Plot</p>
+                    }
+                    else
+                    {
+                    <p class="card-text">Plot is empty</p>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+    <hr />
+    <h2 style="text-align:left;">Зараз у кіно: </h2>
+    <div>
+        @foreach (var movie in Model.Movies)
+        {
+            <div class="card border-primary mb-3" style="max-width: 20rem;">
+                <div class="card-header">Режисер: @movie.Director</div>
+                <div class="card-body">
+                    <h4 class="card-title">@movie.Title</h4>
+                    @if (movie.Plot != null)
+                    {
+                        <p class="card-text">@movie.Plot</p>
+                    }
+                    else
+                    {
+                        <p class="card-text">Plot is empty</p>
+                    }
+                </div>
+            </div>
+        }
+    </div>
 </div>

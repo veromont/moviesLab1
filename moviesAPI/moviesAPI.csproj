@@ -90,4 +90,8 @@
     <None Include="wwwroot\no_image_image.jpg" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="ValidationAttributes\" />
+  </ItemGroup>
+
 </Project>

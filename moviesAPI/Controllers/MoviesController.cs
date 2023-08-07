@@ -17,6 +17,7 @@ namespace moviesAPI.Controllers
             _validator = validator;
         }
 
+        [HttpGet]
         public async Task<IActionResult> Index()
         {
             var entities = await _repository.GetAll<Movie>();
@@ -25,6 +26,8 @@ namespace moviesAPI.Controllers
                           View(entities) :
                           Problem("Нічого не знайдено");
         }
+
+        [HttpGet]
         public async Task<IActionResult> Details(Guid id)
         {
             var entity = await _repository.GetById<Movie>(id);

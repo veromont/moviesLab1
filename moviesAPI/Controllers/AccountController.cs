@@ -4,11 +4,14 @@ using Microsoft.AspNetCore.Mvc;
 using moviesAPI.Areas.Identity.Data;
 using moviesAPI.Models.ViewModels;
 using Microsoft.AspNetCore.Authorization;
+using moviesAPI.Repositories;
+using moviesAPI.Models.EntityModels;
 
 namespace moviesAPI.Controllers
 {
     public class AccountController : Controller
     {
+        private readonly GenericCinemaRepository _repository;
         private readonly SignInManager<User> _signInManager;
         private readonly UserManager<User> _userManager;
         private readonly IEmailSender _emailSender;
@@ -17,6 +20,7 @@ namespace moviesAPI.Controllers
         private readonly string DEFAULT_ROUTE_ACTION = "Index";
 
         public AccountController(
+            GenericCinemaRepository repository,
             SignInManager<User> signInManager, 
             UserManager<User> userManager, 
             IEmailSender emailSender)
@@ -24,23 +28,19 @@ namespace moviesAPI.Controllers
             _signInManager = signInManager;
             _userManager = userManager;
             _emailSender = emailSender;
+            _repository = repository;
         }
 
         [HttpGet]
         public async Task<IActionResult> Profile()
         {
             var user = await _userManager.GetUserAsync(User);
-            if (user == null)
-            {
-                return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
-            }
-
-            var model = new ProfileModel(user);
+            var model = await createProfileModelFromUser(user);
             return View(model);
         }
 
         [HttpPost]
-        public async Task<ActionResult> UploadImage(IFormFile imageFile)
+        public async Task<IActionResult> UploadImage(IFormFile imageFile)
         {
             var user = await _userManager.GetUserAsync(User);
             if (imageFile != null && imageFile.Length > 0)
@@ -52,26 +52,20 @@ namespace moviesAPI.Controllers
                 }
             }
             await _userManager.UpdateAsync(user);
-            var newModel = new ProfileModel(user);
-            return View("Profile", newModel);
+            return RedirectToAction(DEFAULT_ROUTE_ACTION, DEFAULT_ROUTE_CONTROLLER);
         }
+
         [HttpPost]
         public async Task<IActionResult> Profile(ProfileModel model)
         {
             var user = await _userManager.GetUserAsync(User);
-            if (user == null)
-            {
-                return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
-            }
             model.UpdateUser(user);
 
+            var selectedGenres = Request.Form["selectedGenres"];
+            handleGenreSelection(user, selectedGenres.ToList());
+
             await _userManager.UpdateAsync(user);
-            if (!ModelState.IsValid)
-            {
-                var md = new ProfileModel(user);
-                return View(md);
-            }
-            return View();
+            return RedirectToAction(DEFAULT_ROUTE_ACTION, DEFAULT_ROUTE_CONTROLLER);
         }
 
         [HttpGet]
@@ -79,6 +73,7 @@ namespace moviesAPI.Controllers
         {
             return View();
         }
+
         [HttpPost]
         public async Task<IActionResult> Register(RegisterModel model)
         {
@@ -125,28 +120,24 @@ namespace moviesAPI.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(LoginModel model)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                var result =
-                await _signInManager.PasswordSignInAsync(model.UserName, model.Password, model.RememberMe, false);
-                if (result.Succeeded)
-                {
-                    // перевіряємо, чи належить URL додатку
-                    if (!string.IsNullOrEmpty(model.ReturnUrl) && Url.IsLocalUrl(model.ReturnUrl))
-                    {
-                        return Redirect(model.ReturnUrl);
-                    }
-                    else
-                    {
-                        return RedirectToAction(DEFAULT_ROUTE_ACTION, DEFAULT_ROUTE_CONTROLLER);
-                    }
-                }
-                else
-                {
-                    ModelState.AddModelError(string.Empty, "Неправильний логін чи(та) пароль");
-                }
+                return View(model);
             }
-            return View(model);
+
+            var result = await _signInManager.PasswordSignInAsync(model.UserName, model.Password, model.RememberMe, false);
+            if (!result.Succeeded)
+            {
+                ModelState.AddModelError(string.Empty, "Неправильний логін чи(та) пароль");
+                return View(model);
+            }
+
+            if (!string.IsNullOrEmpty(model.ReturnUrl) && Url.IsLocalUrl(model.ReturnUrl))
+            {
+                return Redirect(model.ReturnUrl);
+            }
+
+            return RedirectToAction(DEFAULT_ROUTE_ACTION, DEFAULT_ROUTE_CONTROLLER);
         }
         
         [HttpPost]
@@ -165,16 +156,94 @@ namespace moviesAPI.Controllers
             {
                 return Content("Помилка");
             }
+
             var user = await _userManager.FindByIdAsync(userId);
             if (user == null)
             {
                 return Content("Помилка");
             }
+
             var result = await _userManager.ConfirmEmailAsync(user, code);
             if (result.Succeeded)
+            {
                 return Content("Успішно підтверджено");
-            else
-                return Content("Помилка");
+            }
+
+            return Content("Помилка");
+        }
+
+        [NonAction]
+        private async Task<IEnumerable<UserGenreConnection>> getRelevantUserGenreConnections(string username)
+        {
+            var userGenreConnections = await _repository.GetAll<UserGenreConnection>();
+            return userGenreConnections.Where(connection => connection.Username == username) ?? new List<UserGenreConnection>();
+        }
+
+        [NonAction]
+        private async Task<IEnumerable<Genre>> getSelectedGenres(string username)
+        {
+            var relevantUserGenreConnections = await getRelevantUserGenreConnections(username);
+            var selectedGenreIds = relevantUserGenreConnections.Select(c => c.GenreId);
+
+            var selectedGenres = new List<Genre>();
+            foreach (var id in selectedGenreIds)
+            {
+                var genre = await _repository.GetById<Genre>(id);
+                if (genre != null)
+                {
+                    selectedGenres.Add(genre);
+                }
+            }
+            return selectedGenres ?? new List<Genre>();
+        }
+
+        [NonAction]
+        private async Task<ProfileModel> createProfileModelFromUser(User user)
+        {
+            var genres = await _repository.GetAll<Genre>();
+            var selectedGenres = await getSelectedGenres(user.UserName);
+            return new ProfileModel(user, genres, selectedGenres);
+
+        }
+
+        [NonAction]
+        private UserGenreConnection findCorrespondingConnection(Genre genre, IEnumerable<UserGenreConnection> RelevantConnections)
+        {
+            return RelevantConnections.Where(c => c.GenreId == genre.Id).First();
+
+        }
+
+        [NonAction]
+        private async Task handleGenreSelection(User user, ICollection<string> newSelectedGenres)
+        {
+            string username = user.UserName;
+            var SelectedGenres = await getSelectedGenres(username);
+            var RelevantConnections = await getRelevantUserGenreConnections(username);
+
+            foreach (var genre in  SelectedGenres)
+            {
+                if (newSelectedGenres.Contains(genre.Name))
+                {
+                    newSelectedGenres.Remove(genre.Name);
+                    continue;
+                }
+                var CorrespondingConnection = findCorrespondingConnection(genre, RelevantConnections);
+                if (CorrespondingConnection != null)
+                {
+                    await _repository.Delete<UserGenreConnection>(CorrespondingConnection.Id);
+                }
+            }
+            foreach (var genre in newSelectedGenres)
+            {
+                var clientGenreConnection = new UserGenreConnection();
+                var genres = await _repository.GetAll<Genre>();
+                var g = genres.Select(g => g).Where(g => g.Name == genre).First();
+                if (g == null) continue;
+                clientGenreConnection.GenreId = g.Id;
+                clientGenreConnection.Username = user.UserName;
+                await _repository.Insert(clientGenreConnection);
+            }
+            await _repository.Save();
         }
     }
 }
