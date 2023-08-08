@@ -37,32 +37,6 @@ namespace moviesAPI.Controllers
             return View(entity);
         }
 
-        public IActionResult Create()
-        {
-            return View();
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Ticket ticket)
-        {
-            var validationResult = await _validator.isTicketInvalid(ticket);
-
-            if (validationResult.Count > 0)
-            {
-                foreach (var errorMessage in validationResult)
-                {
-                    ModelState.AddModelError(errorMessage.Key, errorMessage.Value);
-                }
-            }
-            else
-            {
-                await _repository.Insert(ticket);
-                await _repository.Save();
-                return RedirectToAction(nameof(Index));
-            }
-            return View(ticket);
-        }
         public async Task<IActionResult> Edit(Guid id)
         {
             if (id == null)

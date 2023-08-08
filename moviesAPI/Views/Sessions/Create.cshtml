@@ -4,48 +4,41 @@
     ViewData["Title"] = "Create";
 }
 
-<h1>Create</h1>
-
-<h4>Session</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Create">
+<div style="text-align: center;">
+    <h2>Додати новий сеанс</h2>
+    <hr />
+    <div class="form-container">
+        <form asp-action="Create" class="create-form">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
             <div class="form-group">
-                <label asp-for="MovieId" class="control-label"></label>
-                <select asp-for="MovieId" class ="form-control" asp-items="ViewBag.MovieId"></select>
+                <label asp-for="MovieId" class="control-label h-font"></label>
+                <select asp-for="MovieId" class="form-control" asp-items="ViewBag.MovieId"></select>
             </div>
             <div class="form-group">
-                <label asp-for="HallId" class="control-label"></label>
-                <select asp-for="HallId" class ="form-control" asp-items="ViewBag.HallId"></select>
+                <label asp-for="HallId" class="control-label h-font"></label>
+                <select asp-for="HallId" class="form-control" asp-items="ViewBag.HallId"></select>
             </div>
             <div class="form-group">
-                <label asp-for="StartTime" class="control-label"></label>
+                <label asp-for="StartTime" class="control-label h-font"></label>
                 <input asp-for="StartTime" class="form-control" />
                 <span asp-validation-for="StartTime" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="EndTime" class="control-label"></label>
+                <label asp-for="EndTime" class="control-label h-font"></label>
                 <input asp-for="EndTime" class="form-control" />
                 <span asp-validation-for="EndTime" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="Price" class="control-label"></label>
+                <label asp-for="Price" class="control-label h-font"></label>
                 <input asp-for="Price" class="form-control" />
                 <span asp-validation-for="Price" class="text-danger"></span>
             </div>
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
+
+            <div class="form-group" style="margin-top: 20px;">
+                <input type="submit" value="Створити" class="btn btn-primary submit-btn" />
+                <a asp-action="Index" class="btn btn-outline-light">Скасувати</a>
             </div>
         </form>
     </div>
 </div>
-
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
-
-@section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
-}

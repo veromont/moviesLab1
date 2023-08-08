@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using moviesAPI.Models.EntityModels;
 
-namespace moviesAPI.Models.CinemaContext;
+namespace moviesAPI.DAL;
 
 public partial class CinemaContext : DbContext
 {
@@ -62,6 +62,7 @@ public partial class CinemaContext : DbContext
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.SessionId).HasColumnName("sessionId");
             entity.Property(e => e.SeatNumber).HasColumnName("seatNumber");
+            entity.Property(e => e.UserId).HasColumnName("clientId");
 
             entity.HasOne(t => t.Session)
                   .WithMany(s => s.SessionTickets)

@@ -1,3 +1,7 @@
+:root {
+    --create-form-width: 600px;
+}
+
 html {
   font-size: 14px;
 }
@@ -25,7 +29,7 @@ body {
 }
 
 .submit-btn {
-    width: 300px;
+    width: calc(var(--create-form-width) * 3 / 5);
 }
 
 .icon-button {
@@ -33,4 +37,19 @@ body {
     font-size: 0;
     cursor: pointer;
     margin-right: 5px;
+}
+
+.create-form {
+    width: var(--create-form-width);
+}
+
+.form-radio-btn {
+    width: calc(var(--create-form-width) / 2);
+}
+
+.h-font {
+    font-size: 18px;
+    font-weight: 400;
+    font-style: normal;
+    margin-bottom: 5px;
 }

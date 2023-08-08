@@ -1,13 +1,13 @@
 using Microsoft.EntityFrameworkCore;
 using moviesAPI.Repositories;
-using moviesAPI.Models.CinemaContext;
 using moviesAPI.Interfaces;
 using moviesAPI.Services;
 using moviesAPI.Validators;
-using moviesAPI.Areas.Identity.Data;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Identity;
+using moviesAPI.DAL;
+using moviesAPI.Models.EntityModels;
 
 var builder = WebApplication.CreateBuilder(args);
 

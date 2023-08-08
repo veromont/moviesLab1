@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using moviesAPI.Areas.Identity.Data;
 using moviesAPI.Models.EntityModels;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;

@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using moviesAPI.DAL;
 using moviesAPI.Models;
-using moviesAPI.Models.CinemaContext;
 
 namespace moviesAPI.Repositories
 {

@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Identity;
-using moviesAPI.Models.EntityModels;
-using Newtonsoft.Json;
+﻿using Microsoft.AspNetCore.Identity;
 
-namespace moviesAPI.Areas.Identity.Data;
+namespace moviesAPI.Models.EntityModels;
 
 public class User : IdentityUser
 {

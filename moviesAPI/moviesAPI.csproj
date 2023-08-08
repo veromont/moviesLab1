@@ -91,7 +91,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="ValidationAttributes\" />
+    <Folder Include="Areas\Identity\Data\" />
+    <Folder Include="Models\CinemaContext\" />
   </ItemGroup>
 
 </Project>
