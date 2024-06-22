@@ -39,16 +39,20 @@ namespace moviesAPI.Controllers
             return View(entity);
         }
 
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
+            var genres = await _repository.GetAll<Genre>();
+            ViewBag.Genres = new SelectList(genres, "Id", "Name");
             return View();
         }
 
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Name,Capacity,IsAvailable")] Movie movie)
+        public async Task<IActionResult> Create(Movie model)
         {
-            var validationResult = await _validator.isMovieInvalid(movie);
+            var validationResult = await _validator.isMovieInvalid(model);
+            model.Id = Guid.NewGuid();
+            var genres = await _repository.GetAll<Genre>();
+            ViewBag.Genres = new SelectList(genres, "Id", "Name");
 
             if (validationResult.Count > 0)
             {
@@ -59,11 +63,16 @@ namespace moviesAPI.Controllers
             }
             else
             {
-                await _repository.Insert(movie);
-                await _repository.Save();
+                await _repository.Insert<Movie>(model);
+                var saved = await _repository.Save();
+                if (saved != string.Empty)
+                {
+                    ModelState.AddModelError("",saved);
+                    return View(model);
+                }
                 return RedirectToAction(nameof(Index));
             }
-            return View(movie);
+            return View(model);
         }
         public async Task<IActionResult> Edit(Guid id)
         {
@@ -81,7 +90,6 @@ namespace moviesAPI.Controllers
         }
 
         [HttpPost]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(Guid id, Movie movie)
         {
             if (id != movie.Id)

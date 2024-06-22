@@ -35,6 +35,9 @@ namespace moviesAPI.Controllers
         {
             var user = await _userManager.GetUserAsync(User);
             var model = await createProfileModelFromUser(user);
+            var genres = await _repository.GetAll<Genre>();
+
+            ViewBag.Genres = genres;
             return View(model);
         }
 
@@ -199,9 +202,8 @@ namespace moviesAPI.Controllers
         [NonAction]
         private async Task<ProfileModel> createProfileModelFromUser(User user)
         {
-            var genres = await _repository.GetAll<Genre>();
             var selectedGenres = await getSelectedGenres(user.UserName);
-            return new ProfileModel(user, genres, selectedGenres);
+            return new ProfileModel(user, selectedGenres);
 
         }
 

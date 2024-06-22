@@ -42,23 +42,16 @@ namespace moviesAPI.Models.ViewModels
         [BindProperty]
         public ProfileInputModel Input { get; set; }
 
-        public List<Genre> Genres { get; set; }
-
         public ProfileModel()
         {
             Input = new ProfileInputModel();
-            Genres = new List<Genre>();
         }
 
         public ProfileModel(IEnumerable<Genre> genres)
         {
             Input = new ProfileInputModel();
-            Genres = genres.ToList();
         }
-        public ProfileModel(
-            User user, 
-            IEnumerable<Genre> allGenres, 
-            IEnumerable<Genre> chosenGenres)
+        public ProfileModel(User user, IEnumerable<Genre> chosenGenres)
         {
             Input = new ProfileInputModel();
             Username = user.UserName;
@@ -69,7 +62,6 @@ namespace moviesAPI.Models.ViewModels
             Input.Image = user.Image;
             Input.Bio = user.Bio;
             Input.FavouriteGenres = chosenGenres.ToList();
-            Genres = allGenres.ToList();
         }
         public void UpdateUser(User user)
         {

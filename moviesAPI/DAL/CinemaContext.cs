@@ -46,15 +46,11 @@ public partial class CinemaContext : DbContext
             entity.Property(e => e.Title).HasColumnName("title");
             entity.Property(e => e.Director).HasColumnName("director");
             entity.Property(e => e.Duration).HasColumnName("duration");
-            entity.Property(e => e.ReleaseDate).HasColumnName("releaseDate");
+            entity.Property(e => e.ReleaseDate).HasColumnName("releaseDate").HasColumnType("date");
             entity.Property(e => e.Rating).HasColumnName("rating");
             entity.Property(e => e.GenreId).HasColumnName("genreId");
             entity.Property(e => e.Plot).HasColumnName("plot");
 
-            entity.HasOne(m => m.Genre)
-                  .WithMany(g => g.Movies)
-                  .HasForeignKey(m => m.GenreId)
-                  .OnDelete(DeleteBehavior.Restrict);
         });
         modelBuilder.Entity<Ticket>(entity =>
         {

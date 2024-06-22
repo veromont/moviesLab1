@@ -17,26 +17,26 @@ public partial class Movie
     public string Director { get; set; } = null!;
 
     [DisplayName("Дата виходу")]
-    public DateOnly ReleaseDate { get; set; }
+    [DataType(DataType.Date)]
+    public DateTime ReleaseDate { get; set; }
 
     [DisplayName("Рейтинг")]
     public double Rating { get; set; }
 
     [DisplayName("Тривалість")]
-    public TimeOnly Duration { get; set; }
+    [DataType(DataType.Time)]
+    public TimeSpan Duration { get; set; }
 
-    [DisplayName("Id жанру")]
+    [DisplayName("Жанр")]
     public int? GenreId { get; set; }
 
     [TableIgnore]
+    [DisplayName("Сюжет")]
     public string? Plot { get; set; }
+
 
     [JsonIgnore]
     [TableIgnore]
     public virtual ICollection<Session>? Sessions { get; set; } = new List<Session>();
-
-    [JsonIgnore]
-    [TableIgnore]
-    public Genre? Genre { get; set; }
 
 }

@@ -1,7 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using moviesAPI.Models.CinemaContext;
 using moviesAPI.Models.EntityModels;
 using moviesAPI.Repositories;
 using moviesAPI.Validators;

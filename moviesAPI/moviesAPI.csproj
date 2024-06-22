@@ -91,7 +91,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Areas\Identity\Data\" />
     <Folder Include="Models\CinemaContext\" />
   </ItemGroup>
 

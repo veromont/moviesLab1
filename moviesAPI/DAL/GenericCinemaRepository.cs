@@ -79,17 +79,17 @@ namespace moviesAPI.Repositories
         {
             return await context.Set<TEntity>().FindAsync(id) != null;
         }
-        public async Task<bool> Save()
+        public async Task<string> Save()
         {
             try
             {
                 await context.SaveChangesAsync();
             }
-            catch
+            catch(Exception e)
             {
-                return false;
+                return e.Message;
             }
-            return true;
+            return string.Empty;
         }
         protected void Dispose(bool disposing)
         {

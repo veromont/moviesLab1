@@ -33,19 +33,14 @@ namespace moviesAPI.Validators
         }
         public async Task<Dictionary<string, string>> isMovieInvalid(Movie movie)
         {
-            const int TOO_LONG = 8;
-            const int TOO_SHORT = 1;
             const int START_OF_CINEMATOGRAPHY = 1890;
             const int MIN_RATING = 0;
             const int MAX_RATING = 10;
 
             var Genres = await repository.GetAll<Genre>();
-            var movieGenre = Genres.Where(genre => genre.Id == movie.GenreId).First();
+            var movieGenre = Genres.Where(genre => genre.Id == movie.GenreId).FirstOrDefault();
 
             var errorMessages = new Dictionary<string,string>();
-
-            if (movie.Duration.Hour > TOO_LONG || movie.Duration.Hour < TOO_SHORT)
-                errorMessages.Add(nameof(Movie.Duration),"тривалість фільму суперечить здоровому ґлузду");
 
             if (movie.ReleaseDate.Year <= START_OF_CINEMATOGRAPHY)
                 errorMessages.Add(nameof(Movie.ReleaseDate), "дата виходу суперечить здоровому ґлузду");
@@ -55,9 +50,6 @@ namespace moviesAPI.Validators
 
             if (movieGenre == null && movie.GenreId != null)
                 errorMessages.Add(nameof(Movie.GenreId), "такого жанру не знайдено");
-
-            if (movie.GenreId != null)
-                movie.Genre = movieGenre;
 
             return errorMessages;
         }
@@ -86,9 +78,9 @@ namespace moviesAPI.Validators
             if (session.EndTime <= session.StartTime) 
                 errorMessages.Add(nameof(session.EndTime), "час сеансу не може бути від'ємним");
 
-            var sessionDuration = TimeOnly.FromTimeSpan(session.EndTime - session.StartTime);
+            var sessionDuration = session.EndTime - session.StartTime;
             if (sessionDuration < movie.Duration) 
-                errorMessages.Add(nameof(session.EndTime), $"сеанс має бути довшим за фільм, фільм триває {movie.Duration.ToShortTimeString}");
+                errorMessages.Add(nameof(session.EndTime), $"сеанс має бути довшим за фільм, фільм триває {movie.Duration.ToString()}");
 
             var overlayingSessions = from s in Sessions
                                      where ((s.StartTime > session.StartTime && s.StartTime < session.EndTime)
@@ -99,7 +91,7 @@ namespace moviesAPI.Validators
             if (overlayingSessions.Count() > 0)
                 errorMessages.Add(nameof(session.StartTime), "заплановано інші сеанси на цей час");
 
-            if (movie.ReleaseDate > DateOnly.FromDateTime(session.StartTime)) 
+            if (DateOnly.FromDateTime(movie.ReleaseDate) > DateOnly.FromDateTime(session.StartTime)) 
                 errorMessages.Add(nameof(session.StartTime), $"фільм ще не вийде станом на {session.StartTime.ToLocalTime}");
 
             if (session.Price < MIN_PRICE)

@@ -49,7 +49,6 @@ namespace moviesAPI.Controllers
         }
 
         [HttpPost]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Genre model)
         {
             var validationResult = _validator.isGenreInvalid(model);
