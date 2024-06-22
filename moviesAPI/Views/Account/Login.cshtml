@@ -1,0 +1,27 @@
+﻿@model moviesAPI.Models.ViewModels.LoginModel
+
+<div style="align-items: center; display: flex; justify-content: center; flex-direction: column;">
+    <h1>Увійти в систему</h1>
+    <form id="loginForm" method="post" style="width: 500px;text-align:center; display: flex; flex-direction: column;">
+        <h3>Уведіть логін і пароль</h3>
+        <hr />
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        <div class="form-floating">
+            <input asp-for="UserName" class="form-control" autocomplete="off" aria-required="true" />
+            <label asp-for="UserName"></label>
+            <span asp-validation-for="UserName" class="text-danger"></span>
+        </div>
+        <div class="form-floating">
+            <input asp-for="Password" class="form-control" autocomplete="off" aria-required="true" />
+            <label asp-for="Password"></label>
+            <span asp-validation-for="Password" class="text-danger"></span>
+        </div>
+        <div class="checkbox">
+            <label asp-for="RememberMe" class="form-label">
+                <input class="form-check-input" asp-for="RememberMe" />
+                @Html.DisplayNameFor(m => m.RememberMe)
+            </label>
+        </div>
+        <button id="loginSubmit" type="submit" class="w-100 btn btn-lg btn-success">Увійти</button>
+    </form>
+</div>

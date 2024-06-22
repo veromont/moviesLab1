@@ -1,11 +1,13 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.OpenApi.Models;
 using moviesAPI.Repositories;
-using moviesAPI.Models.CinemaContext;
-using System.Text.Json;
 using moviesAPI.Interfaces;
 using moviesAPI.Services;
 using moviesAPI.Validators;
+using Microsoft.AspNetCore.Localization;
+using Microsoft.AspNetCore.Identity.UI.Services;
+using Microsoft.AspNetCore.Identity;
+using moviesAPI.DAL;
+using moviesAPI.Models.EntityModels;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,55 +16,55 @@ builder.Services.AddDbContext<CinemaContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"));
     options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
 });
-
-builder.Services.AddControllers().AddJsonOptions(x =>
+builder.Services.AddDbContext<IdentityContext>(options =>
 {
-    x.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+    options.UseSqlServer(builder.Configuration.GetConnectionString("IdentityConnection"));
 });
-
-builder.Services.AddSwaggerGen(d =>
+builder.Services.AddDefaultIdentity<User>(options => 
 {
-    d.SwaggerDoc("v1", new OpenApiInfo
-    {
-        Title = "Movies API",
-        Version = "v2",
-        Description =
-                "The system provides the ability to transform Excel to JSON(Import) and JSON to Excel(Export).\n\nAccess to the system functionality is provided via API."
-    }
-    );
-});
+    options.SignIn.RequireConfirmedAccount = true;
+    options.Password.RequireDigit = false;
+    options.Password.RequireLowercase = false;
+    options.Password.RequireUppercase = false;
+    options.Password.RequireNonAlphanumeric = false;
+    options.Password.RequiredLength = 4;
+}).AddEntityFrameworkStores<IdentityContext>();
 
-builder.Services.AddCors(options =>
-{
-
-    options.AddDefaultPolicy(
-        policy =>
-        {
-            policy.AllowAnyOrigin()
-                .AllowAnyHeader()
-                .AllowAnyMethod();
-        });
-});
-
+builder.Services.AddTransient<IEmailSender, EmailSenderService>();
 builder.Services.AddScoped<GenericCinemaRepository>();
-builder.Services.AddScoped<IPdfTransformService, PdfTransformService>();
+builder.Services.AddScoped<IPdfTransformService, PdfTransform>();
 builder.Services.AddTransient<EntityValidator>();
-builder.Services.AddEndpointsApiExplorer();
+
+builder.Services.Configure<AuthMessageSenderOptions>(builder.Configuration);
+
+builder.Services.AddControllersWithViews();
 
 //resolve fonts once
 MyFontResolver.Apply();
 
 var app = builder.Build();
-if (app.Environment.IsDevelopment())
+
+app.UseRequestLocalization(new RequestLocalizationOptions
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    DefaultRequestCulture = new RequestCulture("uk-UA"),
+});
+
+if (!app.Environment.IsDevelopment())
+{
+    app.UseExceptionHandler("/Home/Error");
+    app.UseHsts();
 }
 
 app.UseHttpsRedirection();
-app.UseCors();
+app.UseStaticFiles();
+
+app.UseRouting();
+app.UseAuthentication();;
+
 app.UseAuthorization();
 
-app.MapControllers();
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}");
 
 app.Run();

@@ -8,51 +8,90 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="fonts\arial\arial.ttf" />
-    <None Remove="fonts\arial\arialbd.ttf" />
-    <None Remove="fonts\arial\arialbi.ttf" />
-    <None Remove="fonts\arial\ariali.ttf" />
-    <None Remove="fonts\constantia\constan.ttf" />
-    <None Remove="fonts\constantia\constanb.ttf" />
-    <None Remove="fonts\constantia\constani.ttf" />
-    <None Remove="fonts\constantia\constanz.ttf" />
+    <None Remove="Material\fonts\arial\arial.ttf" />
+    <None Remove="Material\fonts\arial\arialbd.ttf" />
+    <None Remove="Material\fonts\arial\arialbi.ttf" />
+    <None Remove="Material\fonts\arial\ariali.ttf" />
+    <None Remove="Material\fonts\constantia\constan.ttf" />
+    <None Remove="Material\fonts\constantia\constanb.ttf" />
+    <None Remove="Material\fonts\constantia\constani.ttf" />
+    <None Remove="Material\fonts\constantia\constanz.ttf" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="6.0.16" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Analyzers" Version="8.0.0-preview.3.23174.2" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.0-preview.3.23174.2">
+    <PackageReference Include="MailKit" Version="4.1.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="6.0.15" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="6.0.15" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="6.0.15" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.15">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.0-preview.3.23174.2">
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="6.0.20" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="6.0.15">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.0-preview.3.23174.8" />
-    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.17.2" />
-    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="6.0.13" />
-    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="7.0.4" />
-    <PackageReference Include="NPOI" Version="2.6.0" />
+    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="6.0.15" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="6.0.8" />
     <PackageReference Include="PDFsharp" Version="6.0.0-preview-2" />
     <PackageReference Include="QRCoder" Version="1.4.1" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.2.3" />
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="fonts\arial\arial.ttf" />
-    <EmbeddedResource Include="fonts\arial\arialbd.ttf" />
-    <EmbeddedResource Include="fonts\arial\arialbi.ttf" />
-    <EmbeddedResource Include="fonts\arial\ariali.ttf" />
-    <EmbeddedResource Include="fonts\constantia\constan.ttf" />
-    <EmbeddedResource Include="fonts\constantia\constanb.ttf" />
-    <EmbeddedResource Include="fonts\constantia\constani.ttf" />
-    <EmbeddedResource Include="fonts\constantia\constanz.ttf" />
+    <EmbeddedResource Include="Material\fonts\arial\arial.ttf" />
+    <EmbeddedResource Include="Material\fonts\arial\arialbd.ttf" />
+    <EmbeddedResource Include="Material\fonts\arial\arialbi.ttf" />
+    <EmbeddedResource Include="Material\fonts\arial\ariali.ttf" />
+    <EmbeddedResource Include="Material\fonts\constantia\constan.ttf" />
+    <EmbeddedResource Include="Material\fonts\constantia\constanb.ttf" />
+    <EmbeddedResource Include="Material\fonts\constantia\constani.ttf" />
+    <EmbeddedResource Include="Material\fonts\constantia\constanz.ttf" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Material\" />
-    <Folder Include="Views\" />
+    <None Include="Views\Shared\_Layout.cshtml" />
+    <None Include="wwwroot\js\site.js" />
+    <None Include="wwwroot\lib\bootstrap\dist\css\bootstrap-grid.css.map" />
+    <None Include="wwwroot\lib\bootstrap\dist\css\bootstrap-grid.min.css.map" />
+    <None Include="wwwroot\lib\bootstrap\dist\css\bootstrap-grid.rtl.css.map" />
+    <None Include="wwwroot\lib\bootstrap\dist\css\bootstrap-grid.rtl.min.css.map" />
+    <None Include="wwwroot\lib\bootstrap\dist\css\bootstrap-reboot.css.map" />
+    <None Include="wwwroot\lib\bootstrap\dist\css\bootstrap-reboot.min.css.map" />
+    <None Include="wwwroot\lib\bootstrap\dist\css\bootstrap-reboot.rtl.css.map" />
+    <None Include="wwwroot\lib\bootstrap\dist\css\bootstrap-reboot.rtl.min.css.map" />
+    <None Include="wwwroot\lib\bootstrap\dist\css\bootstrap-utilities.css.map" />
+    <None Include="wwwroot\lib\bootstrap\dist\css\bootstrap-utilities.min.css.map" />
+    <None Include="wwwroot\lib\bootstrap\dist\css\bootstrap-utilities.rtl.css.map" />
+    <None Include="wwwroot\lib\bootstrap\dist\css\bootstrap-utilities.rtl.min.css.map" />
+    <None Include="wwwroot\lib\bootstrap\dist\js\bootstrap.bundle.js" />
+    <None Include="wwwroot\lib\bootstrap\dist\js\bootstrap.bundle.js.map" />
+    <None Include="wwwroot\lib\bootstrap\dist\js\bootstrap.bundle.min.js" />
+    <None Include="wwwroot\lib\bootstrap\dist\js\bootstrap.bundle.min.js.map" />
+    <None Include="wwwroot\lib\bootstrap\dist\js\bootstrap.esm.js" />
+    <None Include="wwwroot\lib\bootstrap\dist\js\bootstrap.esm.js.map" />
+    <None Include="wwwroot\lib\bootstrap\dist\js\bootstrap.esm.min.js" />
+    <None Include="wwwroot\lib\bootstrap\dist\js\bootstrap.esm.min.js.map" />
+    <None Include="wwwroot\lib\bootstrap\dist\js\bootstrap.js" />
+    <None Include="wwwroot\lib\bootstrap\dist\js\bootstrap.js.map" />
+    <None Include="wwwroot\lib\bootstrap\dist\js\bootstrap.min.js" />
+    <None Include="wwwroot\lib\bootstrap\dist\js\bootstrap.min.js.map" />
+    <None Include="wwwroot\lib\bootstrap\LICENSE" />
+    <None Include="wwwroot\lib\jquery-validation-unobtrusive\jquery.validate.unobtrusive.js" />
+    <None Include="wwwroot\lib\jquery-validation-unobtrusive\jquery.validate.unobtrusive.min.js" />
+    <None Include="wwwroot\lib\jquery-validation\dist\additional-methods.js" />
+    <None Include="wwwroot\lib\jquery-validation\dist\additional-methods.min.js" />
+    <None Include="wwwroot\lib\jquery-validation\dist\jquery.validate.js" />
+    <None Include="wwwroot\lib\jquery-validation\dist\jquery.validate.min.js" />
+    <None Include="wwwroot\lib\jquery-validation\LICENSE.md" />
+    <None Include="wwwroot\lib\jquery\dist\jquery.js" />
+    <None Include="wwwroot\lib\jquery\dist\jquery.min.js" />
+    <None Include="wwwroot\lib\jquery\dist\jquery.min.map" />
+    <None Include="wwwroot\no_image_image.jpg" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Models\CinemaContext\" />
   </ItemGroup>
 
 </Project>

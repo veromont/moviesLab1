@@ -1,110 +1,138 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using moviesAPI.Models.EntityModels;
 using moviesAPI.Repositories;
-using moviesAPI.Models.db;
 using moviesAPI.Validators;
-using System;
 
 namespace moviesAPI.Controllers
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class HallsController : ControllerBase
+    public class HallsController : Controller
     {
-        private readonly GenericCinemaRepository _repository;
-        private readonly EntityValidator _validator;
-        public HallsController(GenericCinemaRepository repository, EntityValidator validator)
+		private readonly GenericCinemaRepository _repository;
+		private readonly EntityValidator _validator;
+		public HallsController(GenericCinemaRepository repository, EntityValidator validator)
+		{
+			_repository = repository;
+			_validator = validator;
+		}
+
+		public async Task<IActionResult> Index()
         {
-            _repository = repository;
-            _validator = validator;
+			var entities = await _repository.GetAll<Hall>();
+
+            return entities != null ?
+                          View(entities) :
+                          Problem("Нічого не знайдено");
         }
-
-        [HttpGet("get-all")]
-        public async Task<ActionResult<IEnumerable<Hall>>> GetHalls()
+        public async Task<IActionResult> Details(int id)
         {
-            var entities = await _repository.Get<Hall>();
-            if (entities == null)
-                return BadRequest();
-
-            return Ok(entities);
-        }
-
-        [HttpGet("get-by-id")]
-        public async Task<ActionResult<Hall>> GetHall(int id)
-        {
-            var entity = await _repository.GetById<Hall>(id);
-            if (entity == null)
+			var entity = await _repository.GetById<Hall>(id);
+			if (entity == null)
             {
-                return BadRequest();
+                return NotFound();
             }
 
-            return Ok(entity);
+            return View(entity);
         }
 
-        [HttpPut("update")]
-        public async Task<ActionResult> UpdateHall(int id, Hall hall)
+        public IActionResult Create()
         {
-            if (!await hallExists(id))
-                return BadRequest($"Зал з id {hall.Id} не існує");
+            return View();
+        }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create([Bind("Id,Name,Capacity,IsAvailable")] Hall hall)
+        {
+			var validationResult = _validator.isHallInvalid(hall);
+
+			if (validationResult.Count > 0)
+			{
+				foreach (var errorMessage in validationResult)
+				{
+					ModelState.AddModelError(errorMessage.Key, errorMessage.Value);
+				}
+			}
+			else
+            {
+                await _repository.Insert(hall);
+                await _repository.Save();
+                return RedirectToAction(nameof(Index));
+            }
+            return View(hall);
+        }
+        public async Task<IActionResult> Edit(int id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var hall = await _repository.GetById<Hall>(id);
+            if (hall == null)
+            {
+                return NotFound();
+            }
+            return View(hall);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Capacity,IsAvailable")] Hall hall)
+        {
             if (id != hall.Id)
-                return BadRequest();
-
-            var validationResult = _validator.isHallInvalid(hall);
-            if (validationResult != string.Empty)
-                return BadRequest(validationResult);
-
-            var updatedSuccessfully = await _repository.Update(id, hall);
-            if (!updatedSuccessfully)
-                return BadRequest();
-
-            var savedSuccessfully = await _repository.Save();
-            if (!savedSuccessfully)
-                return BadRequest();
-
-            return Ok();
-        }
-
-        [HttpPost("insert")]
-        public async Task<ActionResult> PostHall(Hall hall)
-        {
-            if (await hallExists(hall.Id))
-                return BadRequest($"Зал з id {hall.Id} уже існує");
-
-            var validationResult = _validator.isHallInvalid(hall);
-            if (validationResult != string.Empty)
-                return BadRequest(validationResult);
-
-            await _repository.Insert(hall);
-
-            var savedSuccessfully = await _repository.Save();
-            if (!savedSuccessfully)
-                return BadRequest();
-
-            return Ok();
-        }
-
-        [HttpDelete("delete-by-id")]
-        public async Task<ActionResult> DeleteHall(int id)
-        {
-            if (!await hallExists(id))
-                return BadRequest($"Зал з id {id} не існує");
-
-            var deletedSuccessfully = await _repository.Delete<Hall>(id);
-
-            if (deletedSuccessfully)
             {
-                var savedSuccessfully = await _repository.Save();
-                if (!savedSuccessfully)
-                    return BadRequest();
-
-                return Ok();
+                return NotFound();
             }
 
-            return BadRequest();
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    await _repository.Update(id ,hall);
+                    await _repository.Save();
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!await hallExists(hall.Id))
+                    {
+                        return NotFound();
+                    }
+                    else
+                    {
+                        return BadRequest();
+                    }
+                }
+                return RedirectToAction(nameof(Index));
+            }
+            return View(hall);
         }
-        private Task<bool> hallExists(int id)
+        public async Task<IActionResult> Delete(int id)
         {
-            return _repository.EntityExists<Hall>(id);
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var hall = await _repository.GetById<Hall>(id);
+            if (hall == null)
+            {
+                return NotFound();
+            }
+
+            return View(hall);
         }
-    }
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(int id)
+        {
+            await _repository.Delete<Hall>(id);
+            await _repository.Save();
+            return RedirectToAction(nameof(Index));
+        }
+		private Task<bool> hallExists(int id)
+		{
+			return _repository.EntityExists<Hall>(id);
+		}
+	}
 }

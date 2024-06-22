@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using moviesAPI.Models.CinemaContext;
+using moviesAPI.DAL;
+using moviesAPI.Models;
 
 namespace moviesAPI.Repositories
 {
@@ -15,7 +16,7 @@ namespace moviesAPI.Repositories
             this.context = context;
         }
 
-        public async Task<IEnumerable<TEntity>> Get<TEntity>() where TEntity : class
+        public async Task<IEnumerable<TEntity>> GetAll<TEntity>() where TEntity : class
         {
             return await context.Set<TEntity>().ToListAsync();
         }
@@ -78,17 +79,17 @@ namespace moviesAPI.Repositories
         {
             return await context.Set<TEntity>().FindAsync(id) != null;
         }
-        public async Task<bool> Save()
+        public async Task<string> Save()
         {
             try
             {
                 await context.SaveChangesAsync();
             }
-            catch
+            catch(Exception e)
             {
-                return false;
+                return e.Message;
             }
-            return true;
+            return string.Empty;
         }
         protected void Dispose(bool disposing)
         {

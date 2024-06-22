@@ -1,0 +1,53 @@
+﻿@using System.Reflection;
+@using System.ComponentModel;
+@using Newtonsoft.Json;
+@using System.ComponentModel.DataAnnotations;
+@using moviesAPI.CustomAttributes;
+@model dynamic
+
+@functions {
+    public static bool isIgnored(PropertyInfo propertyInfo)
+    {
+        return Attribute.IsDefined(propertyInfo, typeof(TableIgnoreAttribute));
+    }
+}
+
+<table class="table">
+    <thead>
+        <tr>
+            @{
+                var properties = Model.GetType().GetProperties();
+                if (properties == null) return;
+                foreach (var propertyInfo in properties)
+                {
+                    if (isIgnored(propertyInfo))
+                    {
+                        continue;
+                    }
+                    var displayAttributes = propertyInfo.GetCustomAttributes(typeof(DisplayNameAttribute), true);
+                    <th>
+                        @((displayAttributes.Length > 0) ? displayAttributes[0].DisplayName : propertyInfo.Name)
+                    </th>
+                }
+            }
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            @foreach (var propertyInfo in Model.GetType().GetProperties())
+            {
+                if (isIgnored(propertyInfo))
+                {
+                    continue;
+                }
+                <td>
+                    @{
+                        var displayedValue = propertyInfo.GetValue(Model)?.ToString() ?? string.Empty;
+                    }
+                    @propertyInfo.GetValue(Model).ToString();
+                </td>
+            }
+        </tr>
+    </tbody>
+</table>

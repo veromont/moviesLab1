@@ -1,148 +1,146 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using moviesAPI.Models;
-using moviesAPI.Models.db;
+using moviesAPI.Models.EntityModels;
 using moviesAPI.Repositories;
 using moviesAPI.Validators;
 
 namespace moviesAPI.Controllers
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class MoviesController : ControllerBase
+    public class MoviesController : Controller
     {
         private readonly GenericCinemaRepository _repository;
         private readonly EntityValidator _validator;
-
         public MoviesController(GenericCinemaRepository repository, EntityValidator validator)
         {
             _repository = repository;
             _validator = validator;
         }
 
-        [HttpGet("get-all")]
-        public async Task<ActionResult<IEnumerable<Movie>>> GetMovies()
+        [HttpGet]
+        public async Task<IActionResult> Index()
         {
-            var entities = await _repository.Get<Movie>();
-            if (entities == null)
-                return BadRequest();
+            var entities = await _repository.GetAll<Movie>();
 
-            return Ok(entities);
+            return entities != null ?
+                          View(entities) :
+                          Problem("Нічого не знайдено");
         }
 
-        [HttpGet("get-by-id")]
-        public async Task<ActionResult<Movie>> GetMovie(string id)
+        [HttpGet]
+        public async Task<IActionResult> Details(Guid id)
         {
-            if (!Guid.TryParse(id, out var uuid))
-                return BadRequest("Некоректний формат id");
-
-            var entity = await _repository.GetById<Movie>(uuid);
+            var entity = await _repository.GetById<Movie>(id);
             if (entity == null)
             {
-                return BadRequest();
+                return NotFound();
             }
 
-            return Ok(entity);
+            return View(entity);
         }
 
-        [HttpPut("update")]
-        public async Task<ActionResult> UpdateMovie(string id, Movie movie)
+        public async Task<IActionResult> Create()
         {
-            if (!Guid.TryParse(id, out var uuid))
-                return BadRequest("Некоректний формат id");
-
-            if (!await movieExists(movie.Id))
-                return BadRequest($"Фільм з id {movie.Id} не існує");
-
-            if (!await movieExists(uuid) && uuid != movie.Id)
-                return BadRequest($"Фільм з id {uuid} існує");
-
-            var validationResult = await _validator.isMovieInvalid(movie);
-            if (validationResult != string.Empty)
-                return BadRequest(validationResult);
-
-            var updatedSuccessfully = await _repository.Update(uuid, movie);
-            if (!updatedSuccessfully)
-                return BadRequest();
-
-            var savedSuccessfully = await _repository.Save();
-            if (!savedSuccessfully)
-                return BadRequest();
-
-            return Ok();
+            var genres = await _repository.GetAll<Genre>();
+            ViewBag.Genres = new SelectList(genres, "Id", "Name");
+            return View();
         }
 
-        [HttpDelete("delete-by-id")]
-        public async Task<ActionResult> DeleteMovie(string id)
+        [HttpPost]
+        public async Task<IActionResult> Create(Movie model)
         {
-            if (!Guid.TryParse(id, out var uuid))
-                return BadRequest("Некоректний формат id");
+            var validationResult = await _validator.isMovieInvalid(model);
+            model.Id = Guid.NewGuid();
+            var genres = await _repository.GetAll<Genre>();
+            ViewBag.Genres = new SelectList(genres, "Id", "Name");
 
-            if (!await movieExists(uuid))
-                return BadRequest($"Фільм з id {uuid} не існує");
-
-            var deletedSuccessfully = await _repository.Delete<Movie>(uuid);
-
-            if (deletedSuccessfully)
+            if (validationResult.Count > 0)
             {
-                var savedSuccessfully = await _repository.Save();
-                if (!savedSuccessfully)
-                    return BadRequest();
-
-                return Ok();
+                foreach (var errorMessage in validationResult)
+                {
+                    ModelState.AddModelError(errorMessage.Key, errorMessage.Value);
+                }
+            }
+            else
+            {
+                await _repository.Insert<Movie>(model);
+                var saved = await _repository.Save();
+                if (saved != string.Empty)
+                {
+                    ModelState.AddModelError("",saved);
+                    return View(model);
+                }
+                return RedirectToAction(nameof(Index));
+            }
+            return View(model);
+        }
+        public async Task<IActionResult> Edit(Guid id)
+        {
+            if (id == null)
+            {
+                return NotFound();
             }
 
-            return BadRequest();
-        }
-        
-        [HttpPost("insert")]
-        public async Task<ActionResult> InsertMovie(Movie movie)
-        {
-            if (await movieExists(movie.Id))
-                return BadRequest($"Фільм з id {movie.Id} уже існує");
-
-            var validationResult = await _validator.isMovieInvalid(movie);
-            if (validationResult != string.Empty)
-                return BadRequest(validationResult);
-
-            await _repository.Insert(movie);
-
-            var savedSuccessfully = await _repository.Save();
-            if (!savedSuccessfully)
-                return BadRequest();
-
-            return Ok();
-        }
-        [HttpPost("get-by-date")]
-        public async Task<ActionResult<IEnumerable<Movie>>> MoviesThisDay(DateOnly date)
-        {
-            var movies = await _repository.Get<Movie>();
-            var result = from m in movies
-                         where m.ReleaseDate.Day == date.Day && m.ReleaseDate.Month == date.Month
-                         select m;
-            return result.ToArray();
+            var movie = await _repository.GetById<Movie>(id);
+            if (movie == null)
+            {
+                return NotFound();
+            }
+            return View(movie);
         }
 
-        [HttpPost("get-by-date-interval")]
-        public async Task<ActionResult<IEnumerable<Movie>>> MoviesThisInterval(DateOnlyIntervalModel interval)
+        [HttpPost]
+        public async Task<IActionResult> Edit(Guid id, Movie movie)
         {
-            DateOnly dateFrom = interval.dateFrom;
-            DateOnly dateTo = interval.dateTo;
-            var movies = await _repository.Get<Movie>();
-            var result = from m in movies
-                         where m.ReleaseDate >= dateFrom && m.ReleaseDate <= dateTo
-                         select m;
-            return result.ToArray();
-        }
+            if (id != movie.Id)
+            {
+                return NotFound();
+            }
 
-        [HttpPost("get-by-genres")]
-        public async Task<ActionResult<IEnumerable<Movie>>> MoviesByGenres(int?[] genresIds)
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    await _repository.Update(id, movie);
+                    await _repository.Save();
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!await movieExists(movie.Id))
+                    {
+                        return NotFound();
+                    }
+                    else
+                    {
+                        return BadRequest();
+                    }
+                }
+                return RedirectToAction(nameof(Index));
+            }
+            return View(movie);
+        }
+        public async Task<IActionResult> Delete(Guid id)
         {
-            var movies = await _repository.Get<Movie>();
-            var result = from m in movies
-                         where genresIds.Contains(m.GenreId)
-                         select m;
-            return result.ToArray();
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var movie = await _repository.GetById<Movie>(id);
+            if (movie == null)
+            {
+                return NotFound();
+            }
+
+            return View(movie);
+        }
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(Guid id)
+        {
+            await _repository.Delete<Movie>(id);
+            await _repository.Save();
+            return RedirectToAction(nameof(Index));
         }
         private Task<bool> movieExists(Guid id)
         {

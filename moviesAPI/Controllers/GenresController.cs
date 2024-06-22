@@ -1,13 +1,13 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using moviesAPI.Models.EntityModels;
+using moviesAPI.Models.ViewModels;
 using moviesAPI.Repositories;
-using moviesAPI.Models.db;
 using moviesAPI.Validators;
 
 namespace moviesAPI.Controllers
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class GenresController : ControllerBase
+    public class GenresController : Controller
     {
         private readonly GenericCinemaRepository _repository;
         private readonly EntityValidator _validator;
@@ -16,96 +16,136 @@ namespace moviesAPI.Controllers
             _repository = repository;
             _validator = validator;
         }
-
-        [HttpGet("get-all")]
-        public async Task<ActionResult<IEnumerable<Genre>>> GetGenres()
+        public async Task<IActionResult> Index()
         {
-            var entities = await _repository.Get<Genre>();
-            if (entities == null)
-            {
-                return BadRequest("ніц не знайдено");
-            }
+            var entities = await _repository.GetAll<Genre>();
 
-            return Ok(entities);
+            return entities != null ?
+                          View(entities) :
+                          Problem("Нічого не знайдено");
         }
-
-        [HttpGet("get-by-id")]
-        public async Task<ActionResult<Genre>> GetGenre(int id)
+        public async Task<IActionResult> Details(int id)
         {
             var entity = await _repository.GetById<Genre>(id);
             if (entity == null)
             {
-                return BadRequest("ніц не знайдено");
+                return NotFound();
             }
 
-            return Ok(entity);
-        }
-
-        [HttpPut("update")]
-        public async Task<ActionResult> UpdateGenre(int id, Genre genre)
-        {
-            if (id != genre.Id) 
-                return BadRequest("вказано некоректний id");
-
-            if (!await genreExists(id))
-                return BadRequest($"Жанр з id {genre.Id} не існує");
-
-            var validationResult = _validator.isGenreInvalid(genre);
-            if (validationResult != string.Empty)
-                return BadRequest(validationResult);
-
-            var updatedSuccessfully = await _repository.Update(id, genre);
-            if (!updatedSuccessfully)
-                return BadRequest("Не вдалося оновити");
-
-            var savedSuccessfully = await _repository.Save();
-            if (!savedSuccessfully)
-                return BadRequest("Не вдалося зберегти");
-
-            return Ok();
-        }
-
-        [HttpPost("insert")]
-        public async Task<ActionResult> InsertGenre(Genre genre)
-        {
-            if (await genreExists(genre.Id))
-                return BadRequest($"Жанр з id {genre.Id} уже існує");
-
-            var validationResult = _validator.isGenreInvalid(genre);
-            if (validationResult != string.Empty)
-                return BadRequest(validationResult);
-
-            await _repository.Insert(genre);
-
-            var savedSuccessfully = await _repository.Save();
-            if (!savedSuccessfully)
-                return BadRequest();
-
-            return Ok();
-        }
-
-        [HttpDelete("delete-by-id")]
-        public async Task<ActionResult> DeleteGenre(int id)
-        {
-            if (!await genreExists(id))
-                return BadRequest($"Жанр з id {id} не існує");
-
-            var deletedSuccessfully = await _repository.Delete<Genre>(id);
-
-            if (deletedSuccessfully)
+            var model = new GenreViewModel(entity);
+            if (model.MovieWithThisGenreCount > 0)
             {
-                var savedSuccessfully = await _repository.Save();
-                if (!savedSuccessfully)
-                    return BadRequest();
-
-                return Ok();
+                return View(model);
             }
 
-            return BadRequest();
+            var movies = await _repository.GetAll<Movie>();
+            model.MovieWithThisGenreCount = movies.Where(m => m.GenreId == entity.Id).Count();
+            return View(model);
         }
-        private async Task<bool> genreExists(int id)
+
+        public IActionResult Create()
         {
-            return await _repository.GetById<Genre>(id) != null;
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Create(Genre model)
+        {
+            var validationResult = _validator.isGenreInvalid(model);
+            var sameIdEntity = await _repository.GetById<Genre>(model.Id);
+
+            if (validationResult.Count > 0)
+            {
+                foreach (var errorMessage in validationResult)
+                {
+                    ModelState.AddModelError(errorMessage.Key, errorMessage.Value);
+                }
+                return View(model);
+            }
+            else if (sameIdEntity is not null)
+            {
+                ModelState.AddModelError(nameof(Genre.Id), "Такий id існує");
+                return View(model);
+            }
+            else
+            {
+                await _repository.Insert(model);
+                await _repository.Save();
+                return RedirectToAction(nameof(Index));
+            }
+        }
+        public async Task<IActionResult> Edit(int id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var genre = await _repository.GetById<Genre>(id);
+            if (genre == null)
+            {
+                return NotFound();
+            }
+            return View(genre);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, Genre genre)
+        {
+            if (id != genre.Id)
+            {
+                return NotFound();
+            }
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    await _repository.Update(id, genre);
+                    await _repository.Save();
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!await genreExists(genre.Id))
+                    {
+                        return NotFound();
+                    }
+                    else
+                    {
+                        return BadRequest();
+                    }
+                }
+                return RedirectToAction(nameof(Index));
+            }
+            return View(genre);
+        }
+        public async Task<IActionResult> Delete(int id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var genre = await _repository.GetById<Genre>(id);
+            if (genre == null)
+            {
+                return NotFound();
+            }
+
+            return View(genre);
+        }
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(int id)
+        {
+            await _repository.Delete<Genre>(id);
+            await _repository.Save();
+            return RedirectToAction(nameof(Index));
+        }
+        private Task<bool> genreExists(int id)
+        {
+            return _repository.EntityExists<Genre>(id);
         }
     }
 }

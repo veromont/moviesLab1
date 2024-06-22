@@ -1,0 +1,71 @@
+﻿@using System.Reflection;
+@using System.ComponentModel;
+@using Newtonsoft.Json;
+@using System.ComponentModel.DataAnnotations;
+@using moviesAPI.CustomAttributes;
+@model IEnumerable<dynamic>
+
+@functions {
+    public static bool isIgnored(PropertyInfo propertyInfo)
+    {
+        return Attribute.IsDefined(propertyInfo, typeof(TableIgnoreAttribute));
+    }
+}
+@if (Model.Count() == 0)
+{
+    <h4>ModelEmptyError</h4>
+    return;
+}
+<table class="table">
+    <thead>
+        <tr>
+            @{
+                var properties = Model.FirstOrDefault()?.GetType().GetProperties();
+                if (properties == null) return;
+                foreach (var propertyInfo in properties)
+                {
+                    if (isIgnored(propertyInfo))
+                    {
+                        continue;
+                    }
+                    var displayAttributes = propertyInfo.GetCustomAttributes(typeof(DisplayNameAttribute), true);
+                    <th>
+                        @((displayAttributes.Length > 0) ? displayAttributes[0].DisplayName : propertyInfo.Name)
+                    </th>
+                }
+            }
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                @foreach (var propertyInfo in item.GetType().GetProperties())
+                {
+                    if (isIgnored(propertyInfo))
+                    {
+                        continue;
+                    }
+                    <td>
+                        @{
+                            var displayedValue = propertyInfo.GetValue(item)?.ToString() ?? string.Empty;
+                        }
+                        @propertyInfo.GetValue(item).ToString();
+                    </td>
+                }
+                <td style="text-align:right;">
+                    <a id="detailsButton" asp-action="Details" asp-route-id="@item.Id" class="icon-button">
+                        <i class="material-icons">info</i>
+                    </a>
+                    <a id="editButton" asp-action="Edit" asp-route-id="@item.Id" class="icon-button">
+                        <i class="material-icons">edit</i>
+                    </a>
+                    <a id="deleteButton" asp-action="Delete" asp-route-id="@item.Id" class="icon-button">
+                        <i class="material-icons">delete</i>
+                    </a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

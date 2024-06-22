@@ -1,0 +1,31 @@
+﻿@model moviesAPI.Models.EntityModels.Genre
+
+@{
+    ViewData["Title"] = "Edit";
+}
+
+<style>
+    .centered {
+        text-align: center;
+    }
+</style>
+
+<div class="centered">
+    <h2>Редагування жанру</h2>
+    <hr />
+    <div class="form-container">
+        <form asp-action="Edit">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="Id" />
+            <div class="form-group">
+                <label asp-for="Name" class="control-label"></label>
+                <input asp-for="Name" class="form-control" />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+            <div class="form-group" style="margin-top: 20px;">
+                <input type="submit" value="Зберегти" class="btn btn-primary submit-btn" />
+                <a asp-action="Index" class="btn btn-outline-light">Скасувати</a>
+            </div>
+        </form>
+    </div>
+</div>

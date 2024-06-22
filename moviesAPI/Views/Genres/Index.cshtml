@@ -1,0 +1,23 @@
+﻿@using System.Reflection;
+@using System.ComponentModel;
+@using Newtonsoft.Json;
+@model IEnumerable<Genre>
+
+@{
+    ViewData["Title"] = "Index";
+    var sortedModel = Model.OrderBy(item => item.Id).ToList();
+}
+
+<h2>Перелік жанрів:</h2>
+
+@if (Model.Count() == 0)
+{
+    <h2 style="text-align:center;">Тут порожньо</h2>
+}
+else
+{
+    <hr />
+            <>Search/filters here</>
+    <hr />
+    await Html.RenderPartialAsync("_PartialTable", Model);
+}

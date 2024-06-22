@@ -1,0 +1,38 @@
+﻿@model moviesAPI.Models.EntityModels.Genre
+
+@{
+    ViewData["Title"] = "Delete";
+}
+<div class="form-container">
+    <h1>Підтвердити дію</h1>
+    <div>
+        <h3>Видалити жанр</h3>
+        <hr />
+        <table class="table" style="max-width: 800px;">
+            <tbody>
+                <tr>
+                    <td>
+                        @Html.DisplayNameFor(model => model.Id)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(model => model.Id)
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        @Html.DisplayNameFor(model => model.Name)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(model => model.Name)
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    
+        <form asp-action="Delete">
+            <input type="hidden" asp-for="Id" />
+            <input type="submit" value="Видалити" class="btn btn-danger" />
+            <a asp-action="Index" class="btn btn-outline-light">Скасувати</a>
+        </form>
+    </div>
+</div>

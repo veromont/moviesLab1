@@ -1,0 +1,44 @@
+﻿@model moviesAPI.Models.ViewModels.GenreViewModel
+
+@{
+    ViewData["Title"] = "Details";
+}
+
+<div class="form-container">
+    <h1>Деталі</h1>
+    <h4>Жанр</h4>
+    <hr />
+    <table class="table" style="max-width: 800px;">
+        <tbody>
+            <tr>
+                <td>
+                    @Html.DisplayNameFor(model => model.Id)
+                </td>
+                <td>
+                    @Html.DisplayFor(model => model.Id)
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    @Html.DisplayNameFor(model => model.Name)
+                </td>
+                <td>
+                    @Html.DisplayFor(model => model.Name)
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    @Html.DisplayNameFor(model => model.MovieWithThisGenreCount)
+                </td>
+                <td>
+                    @Html.DisplayFor(model => model.MovieWithThisGenreCount)
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <div>
+        <a asp-action="Edit" asp-route-id="@Model?.Id" class="btn btn-primary submit-btn">Редагувати</a>
+        <a asp-action="Index" class="btn btn-danger">Видалити</a>
+        <a asp-action="Index" class="btn btn-outline-light">Назад</a>
+    </div>
+</div>

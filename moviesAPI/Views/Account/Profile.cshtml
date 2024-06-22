@@ -1,0 +1,87 @@
+﻿@model moviesAPI.Models.ViewModels.ProfileModel
+
+<h3>@Model.Username</h3>
+<style>
+    .clickable{
+        cursor: pointer;
+    }
+    .image{
+        width: 340px;
+        height: 380px;
+    }
+</style>
+<div class="row">
+    <div class="col-md-4">
+        <form asp-controller="Account" asp-action="UploadImage" method="post" enctype="multipart/form-data" id="form">
+            <input type="file" name="imageFile" id="imageFile" onchange="form.submit()" accept="image/*" style="display: none;">
+        </form>
+        @if (Model.Input.Image != null)
+        {
+            <img src="data:image/png;base64,@Convert.ToBase64String(Model.Input.Image)"
+                 alt="Image" class="img-fluid rounded-4 mb-2 clickable image" id="uploadedImage">
+        }
+        else
+        {
+            <img src="~/no_image_image.jpg" alt="Default Image"
+                 class="img-fluid rounded-4 mb-2 clickable image" id="defaultImage">
+        }
+
+        <div class="form-floating">
+            <input asp-for="Input.Name" class="form-control" />
+            <label asp-for="Input.Name" class="form-label"></label>
+            <span asp-validation-for="Input.Name" class="text-danger"></span>
+        </div>
+        <div class="form-floating">
+            <input asp-for="Input.Surname" class="form-control" />
+            <label asp-for="Input.Surname" class="form-label"></label>
+            <span asp-validation-for="Input.Surname" class="text-danger"></span>
+        </div>
+        <div class="form-floating">
+            <input asp-for="Input.PhoneNumber" class="form-control" />
+            <label asp-for="Input.PhoneNumber" class="form-label"></label>
+            <span asp-validation-for="Input.PhoneNumber" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <form asp-controller="Account" asp-action="Profile" id="profile-form" method="post">
+            <div class="form-group">
+                <label asp-for="Input.Bio" class="form-label"></label>
+                <textarea asp-for="Input.Bio" class="form-control" rows="8"></textarea>
+                <span asp-validation-for="Input.Bio" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Input.FavouriteMovieTitle" class="form-label"></label>
+                <input asp-for="Input.FavouriteMovieTitle" class="form-control" disabled/>
+                <span asp-validation-for="Input.FavouriteMovieTitle" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label for="exampleSelect2" class="form-label mt-4">Улюблені жанри</label>
+                <select multiple="" class="form-select" id="exampleSelect2" name="selectedGenres">
+                    @foreach(var genre in ViewBag.Genres)
+                    {
+                        @if (Model.Input.FavouriteGenres.Any(g => g.Id == genre.Id))
+                        {
+                            <option selected>@genre.Name</option>
+                        }
+                        else
+                        {
+                            <option>@genre.Name</option>
+                        }
+                    }
+                </select>
+            </div>
+            <button id="update-profile-button" type="submit" class="w-100 btn btn-lg btn-primary">Зберегти</button>
+        </form>
+    </div>
+</div>
+
+
+<script type="text/javascript">
+    document.getElementById("uploadedImage").addEventListener("click", onImageClick);
+    document.getElementById("defaultImage").addEventListener("click", onImageClick);
+
+    function onImageClick(){
+        document.getElementById("imageFile").click();
+    };
+</script>
